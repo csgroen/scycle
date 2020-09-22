@@ -4,6 +4,7 @@ import scanpy as sc
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from anndata import AnnData
+from ._prep_simple import prep_simple
 
 def prep_pooling(adata: AnnData, dim_red_method_pooling: str='pca', 
                  n_neighbors: int=10, min_counts: int=1, target_sum: int=10000, 

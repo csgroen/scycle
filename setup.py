@@ -16,4 +16,5 @@ setup(name='scycle',
           'plotnine',
           'typing',
       ],
+      include_package_data = True,
       zip_safe=False)

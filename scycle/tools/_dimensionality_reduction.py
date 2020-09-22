@@ -5,6 +5,7 @@ from typing import Optional
 from sklearn.decomposition import PCA, FastICA
 import numpy as np
 from anndata import AnnData
+from ..annot import cellcycle_signatures
 
 def dimensionality_reduction(adata: AnnData, method: str='pca', n_comps: int=30, 
             sig_names: list=['G1', 'S-phase', 'Histones', 'G2-M'], 
