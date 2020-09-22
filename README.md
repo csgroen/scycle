@@ -6,4 +6,4 @@ for each cell in a dataset.
 
 To install, use pip:
 
-`pip install git+https://github.com/csgroen/scycle.git`
+`pip install git+https://github.com/csgroen/scycle.git#egg=scycle`
