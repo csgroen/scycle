@@ -29,7 +29,7 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
         
     X_elpigraph_training = X_emb
     egr = elpigraph.computeElasticPrincipalCircle(X_elpigraph_training, 
-                                                  InitNodes = 3, NumNodes = n_nodes,
+                                                  NumNodes = n_nodes,
                                                   verbose = verbose)
     adata.uns['egr'] = egr[0]
     

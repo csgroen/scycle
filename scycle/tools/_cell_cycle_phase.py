@@ -37,7 +37,8 @@ def cell_cycle_phase(adata, n_points = 100,
     #-- Divide cell cycle
     pseudotime = adata.obs['pseudotime']
     sphase = adata.obs['S-phase']
-    hists = adata.obs['Histones']        
+    hists = adata.obs['Histones']     
+    g2m = adata.obs['G2-M']
     
     #-- Get y's (time points)
     time_points = np.array(range(0,n_points))/n_points
@@ -49,10 +50,12 @@ def cell_cycle_phase(adata, n_points = 100,
     #-- Get loess models    
     sphase_pred = _signature_loess(pseudotime, sphase, time_points)
     hist_pred = _signature_loess(pseudotime, hists, time_points)
+    g2m_pred = _signature_loess(pseudotime, g2m, time_points)
     
     #-- Get gradient changes
     sphase_grad = np.gradient(sphase_pred)
     hist_grad = np.gradient(hist_pred)
+    g2m_grad = np.gradient(g2m_pred)
     
     #-- Find limits of phases
     sphase_start = np.min(np.where(sphase_grad > ref_gradient))
@@ -60,8 +63,8 @@ def cell_cycle_phase(adata, n_points = 100,
     hist_plateau = (hist_grad < ref_gradient) & [i > sphase_start for i in range(n_points)] & (hist_pred > np.quantile(hist_pred, plateau_score_minquant))
     g2_start = np.min(np.where(hist_plateau))
     
-    m_increase = [i > g2_start for i in range(n_points)] & (hist_grad < -ref_gradient)
-    m_start = np.min(np.where(m_increase))
+    m_increase = [i > g2_start for i in range(n_points)] & (g2m_grad < ref_gradient)
+    m_start = np.min(np.where(m_increase)) 
     
     #-- Inform
     if verbose:
