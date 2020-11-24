@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import scanpy as sc
-import numpy as np
 from anndata import AnnData
 
 def prep_simple(adata: AnnData, min_counts: int= 1, target_sum: int=10000, 
@@ -45,9 +44,9 @@ def prep_simple(adata: AnnData, min_counts: int= 1, target_sum: int=10000,
     sc.pp.filter_genes(adata, min_counts=min_counts)
     sc.pp.normalize_total(adata, target_sum = target_sum)
     sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, n_top_genes = n_top_genes, n_bins = n_bins)
-    ind_genes = np.where(adata.var['highly_variable'])[0]
-    adata = adata[:,ind_genes] if filter_var_genes else adata
+
+    if filter_var_genes: sc.pp.highly_variable_genes(adata, n_top_genes = n_top_genes, n_bins = n_bins, subset=True)
+    
     if not for_pooling: 
         adata.uns['scycle'] = {'preprocess': {'method': 'simple', 'min_counts': min_counts, 
                                               'target_sum': target_sum, 'filter_var_genes': filter_var_genes, 

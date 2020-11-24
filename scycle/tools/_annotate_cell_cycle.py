@@ -34,10 +34,16 @@ def annotate_cell_cycle (adata: AnnData, s_start: Optional[float]=None,
     
     if s_start == None:
         s_start = adata.uns['scycle']['cell_cycle_division']['sphase_start']
+    else:
+        adata.uns['scycle']['cell_cycle_division']['sphase_start'] = s_start
     if g2_start == None:
         g2_start = adata.uns['scycle']['cell_cycle_division']['g2_start']
+    else:
+        adata.uns['scycle']['cell_cycle_division']['g2_start'] =  g2_start
     if m_start == None:
         m_start = adata.uns['scycle']['cell_cycle_division']['m_start']
+    else:
+        adata.uns['scycle']['cell_cycle_division']['m_start'] = m_start
         
     cell_times = adata.obs['pseudotime'].values
     cycle_phase = [_get_cycle_phase(cell_time, s_start, g2_start, m_start) for cell_time in cell_times]

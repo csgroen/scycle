@@ -4,7 +4,7 @@ from plotnine import aes, geom_path, geom_point, geom_text
 from ._scatter_projection import scatter_projection
 
 def scatter_projection_circle (adata, col_var = 'total_counts', palette = 'viridis', 
-                       size = 1.5, node_size = 7, node_color = 'total_counts', show_nid = False):
+                       size = 1.5, node_size = 7, node_color = 'lightgrey', show_nid = True):
     """Plots the 2-D projection of cells with the principal circle nodes and
     edges overlayed.
     

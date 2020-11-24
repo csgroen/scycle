@@ -25,16 +25,17 @@ def lineplot_celldiv_moment(adata):
     edge_to_0 = adata.uns['scycle']['cell_div_moment']['cell_div_edge'][0]
     edges = adata.uns['princirc_gr']['edges']
     edges['cell_div'] = edges['e1'] == edge_to_0
+    ref_var = adata.uns['scycle']['cell_div_moment']['ref_var']
     
-    cell_div_count = edges[edges['e1'] == edge_to_0]['mean_counts']
+    cell_div_count = edges[edges['e1'] == edge_to_0]['mean_var']
         
-    cell_div_plot = (ggplot(edges, aes('e1', 'mean_counts'))
-     + geom_point(aes(y = 'mean_counts'), size = 2)
-     + geom_path(aes(y = 'mean_counts'))
-     + geom_smooth(aes(y = 'mean_counts'), method = 'lm', linetype = 'dashed')
+    cell_div_plot = (ggplot(edges, aes('e1', 'mean_var'))
+     + geom_point(aes(y = 'mean_var'), size = 2)
+     + geom_path(aes(y = 'mean_var'))
+     + geom_smooth(aes(y = 'mean_var'), method = 'lm', linetype = 'dashed')
      + annotate("point", x = edge_to_0, y = cell_div_count, color = 'red', size = 2)
-     + labs(x = 'Edge position', y = 'Total counts')
-     + geom_col(aes(y = 'dif_counts', fill = 'cell_div'))
+     + labs(x = 'Edge position', y = ref_var)
+     + geom_col(aes(y = 'diff_var', fill = 'cell_div'))
      + scale_fill_manual(values = ['darkgrey', 'red'], guide = False)
      + theme_std)
     

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='scycle',
-      version='0.1',
+      version='0.1.5',
       description='Cell cycle pseudotime in single-cell RNA-seq',
       url='http://github.com/csgroen/scycle',
       author=['Clarice Groeneveld', 'Andrei Zinovyev'],
@@ -17,4 +17,5 @@ setup(name='scycle',
           'typing',
       ],
       include_package_data = True,
+      package_data ={'': ['data/*.pkl']},
       zip_safe=False)

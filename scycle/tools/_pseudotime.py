@@ -4,8 +4,8 @@ import numpy as np
 import elpigraph
 from anndata import AnnData
 from sklearn.mixture import GaussianMixture
-def pseudotime(adata: AnnData, scale: bool=True, border_threshold: float=0.05,
-               verbose: bool=True, ):
+def pseudotime(adata: AnnData, scale: bool=True, remap_border = False, border_threshold: float=0.05,
+               verbose: bool=True):
     """ Calculate pseudotime from the principal circle
     
     Parameters
@@ -15,6 +15,10 @@ def pseudotime(adata: AnnData, scale: bool=True, border_threshold: float=0.05,
         `tl.principal_circle` and `tl.remap_nodes`.
     scale: bool
         If True, pseudotime values are given in a scale of 0 to 1.
+    remap_border: bool
+        If True, the points on the border of cell division will be re-evaluated
+        based on their total counts to better predict if they have already
+        divided or are about to divide
     border_threshold: float
         A number between 0 and 1 representing the percentages at each end that
         can be considered on the 'border' of cell division (i.e. right before 
@@ -44,7 +48,8 @@ def pseudotime(adata: AnnData, scale: bool=True, border_threshold: float=0.05,
     prj_vals = ProjStruct['ProjectionValues']
     
     #-- Fix border effect
-    edgeid = _remap_border_points(edgeid, X_counts, border_threshold, n_nodes)
+    if remap_border:
+        edgeid = _remap_border_points(edgeid, X_counts, border_threshold, n_nodes)
 
     #-- Get time points
     node_times = np.array(range(n_nodes))
@@ -58,12 +63,7 @@ def pseudotime(adata: AnnData, scale: bool=True, border_threshold: float=0.05,
     
     #-- Scale
     pseudotimes = np.array(time_point)/(n_nodes-1) if scale else np.array(time_point)
-    
-  
 
-
-    
-    
     #-- Add to adata
     adata.obs['pseudotime'] = pseudotimes
     adata.uns['scycle']['pseudotime'] = {'scale': scale}

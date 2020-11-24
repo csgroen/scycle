@@ -41,7 +41,6 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     #-- Make edgelist (for npos)
     e1 = [i for i in range(n_nodes)]
     e2 = [i+1 for i in range(n_nodes)]; e2[n_nodes-1] = 0
-    edges = np.column_stack((e1, e2))
     
     #-- Map cells to nodes
     partition, dists = elpigraph.src.core.PartitionData(X = X_emb, 
@@ -58,13 +57,7 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
                         for i in range(len(node_p))]
     node_coords['total_counts'] = node_read_counts
     
-    #-- Count per edge
-    edge_abs_diff_counts = np.zeros(len(edges))
-    for i,e in enumerate(edges):
-        edge_abs_diff_counts[i] = np.abs(node_read_counts[e[0]]-node_read_counts[e[1]])
-    
-    edge_data = pd.DataFrame({'e1': e1, 'e2': e2, 'mean_counts': node_read_counts, 
-                              'dif_counts': edge_abs_diff_counts})
+    edge_data = pd.DataFrame({'e1': e1, 'e2': e2, 'mean_counts': node_read_counts})
     
     #-- Add to adata
     adata.uns['princirc_gr'] = {'node_coords': node_coords, 'edge_coords': edge_coords, 'edges': edge_data}
