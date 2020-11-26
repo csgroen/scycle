@@ -11,7 +11,7 @@ def prep_pooling(
     adata: AnnData,
     dim_red_method_pooling: str = "pca",
     n_neighbors: int = 10,
-    embed_n_comps: int = 30,
+    embed_n_comps: int = 20,
     filter_cells: bool = True,
     min_counts: int = 10000,
     max_counts: int = 40000,
