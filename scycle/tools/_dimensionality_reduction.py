@@ -6,7 +6,6 @@ from typing import Optional
 # from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
 from algorithms.stabilized_ICA import StabilizedICA
-from sklearn.preprocessing import scale
 from anndata import AnnData
 from ..annot import cellcycle_signatures
 
