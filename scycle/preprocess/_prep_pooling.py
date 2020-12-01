@@ -4,20 +4,19 @@ import scanpy as sc
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from anndata import AnnData
-from ._prep_simple import prep_simple
+from ._prep_simple import prep_simple, quality_control
 
 
 def prep_pooling(
     adata: AnnData,
     dim_red_method_pooling: str = "pca",
-    n_neighbors: int = 10,
+    n_neighbors: int = 5,
     embed_n_comps: int = 20,
     filter_cells: bool = True,
     min_counts: int = 10000,
     max_counts: int = 40000,
     max_mt_ratio: int = 20,
     normalize_counts: bool = True,
-    target_sum: int = 10000,
     filter_var_genes: bool = True,
     n_top_genes: int = 10000,
     for_pooling: bool = True,
@@ -51,9 +50,6 @@ def prep_pooling(
         filtering.
     normalize_counts: bool
         Set it to False if library does not need normalization
-    target_sum: int
-        Target sum of counts for library normalization. Passed to
-        sc.pp.normalize_total.
     filter_var_genes: bool
         If True, only `n_top_genes` highly variable genes are kept.
     n_top_genes: int
@@ -79,20 +75,22 @@ def prep_pooling(
 
     if verbose:
         print("Preparing embedding...")
+
+    assert division_factor != 0, "Null division factor. Terminating..."
+    adata.X = adata.X / division_factor
+
+    if filter_cells:
+        quality_control(adata, min_counts, max_counts, max_mt_ratio, verbose)
+
     adata_simple = adata.copy()
     prep_simple(
         adata_simple,
-        filter_cells,
-        min_counts,
-        max_counts,
-        max_mt_ratio,
         normalize_counts,
-        target_sum,
         filter_var_genes,
         n_top_genes,
         True,
         log_transform,
-        division_factor,
+        1,
         False,
     )
 
@@ -107,17 +105,12 @@ def prep_pooling(
     _smooth_adata_by_pooling(adata, X_embed, n_neighbours=n_neighbors)
     prep_simple(
         adata,
-        filter_cells,
-        min_counts,
-        max_counts,
-        max_mt_ratio,
         normalize_counts,
-        target_sum,
         filter_var_genes,
         n_top_genes,
         False,
         log_transform,
-        division_factor,
+        1,
         verbose,
     )
 
@@ -126,17 +119,16 @@ def prep_pooling(
             "method": "pooling",
             "n_neighbors": n_neighbors,
             "min_counts": min_counts,
-            "target_sum": target_sum,
             "n_top_genes": n_top_genes,
             "embed_n_comps": embed_n_comps,
         }
     }
 
 
-def _embed_for_pooling(obj, dim_red, n_comps):
+def _embed_for_pooling(adata, dim_red, n_comps):
     if dim_red == "pca":
-        sc.tl.pca(obj, n_comps=n_comps)
-        X_embed = obj.obsm["X_pca"]
+        sc.tl.pca(adata, n_comps=n_comps)
+        X_embed = adata.obsm["X_pca"]
         return X_embed
 
 

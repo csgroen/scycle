@@ -29,19 +29,33 @@ def enrich_components(adata, verbose=True):
 
     g1s_scores = _compute_scores(adata, g1s_markers)
     g2m_scores = _compute_scores(adata, g2m_markers)
-    g2m_inhibitory_scores = _compute_scores(adata, g2m_inhibitory_markers)
+    g2mi_scores = _compute_scores(adata, g2m_inhibitory_markers)
     histone_scores = _compute_scores(adata, histone_markers)
+
+    g2m_idx = np.argmax(g2m_scores)
+    g1s_scores[g2m_idx] = 0
+    g2mi_scores[g2m_idx] = 0
+    histone_scores[g2m_idx] = 0
+
+    g1s_idx = np.argmax(g1s_scores)
+    g2mi_scores[g1s_idx] = 0
+    histone_scores[g1s_idx] = 0
+
+    g2mi_idx = np.argmax(g2mi_scores)
+    histone_scores[g2mi_idx] = 0
+
+    histone_idx = np.argmax(histone_scores)
 
     # -- Return
     adata.uns["scycle"]["enrich_components"] = {
-        "G1/S": np.argmax(g1s_scores),
-        "G2/M+": np.argmax(g2m_scores),
-        "G2/M-": np.argmax(g2m_inhibitory_scores),
-        "Histone": np.argmax(histone_scores),
+        "G1/S": g1s_idx,
+        "G2/M+": g2m_idx,
+        "G2/M-": g2mi_idx,
+        "Histone": histone_idx,
     }
 
 
 def _compute_scores(adata, marker_genes):
     marker_genes = [g for g in marker_genes if g in adata.var_names]
     sel = [(g in marker_genes) for g in adata.var_names]
-    return np.mean(adata.uns["dimRed"].S_[:, sel], axis=0)
+    return np.mean(adata.uns["dimRed"].S_[:, sel], axis=1)
