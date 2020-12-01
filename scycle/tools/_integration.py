@@ -47,6 +47,9 @@ def integration(
         "dimRed" in adata_reference.uns
     ), "ICA projection matrix missing in source AnnData. \
         Dimensionality reduction must be computed first."
+    assert (
+        "enrich_components" in adata_reference.uns
+    ), "Components must be enriched first."
 
     if verbose:
         print("-- Integrating datasets")
