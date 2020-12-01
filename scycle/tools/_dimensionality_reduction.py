@@ -154,16 +154,23 @@ def _dimRed_pca(adata, n_comps, verbose=False):
     return {"obj": pca, "dimred": X_dimRed}
 
 
-def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
+def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
     # -- Run ICA
     if verbose:
         print("-- Dimensionality reduction using ICA...")
-    # ica = StabilizedICA(n_components = n_comps, max_iter = max_iter)
-    # ica_fit = ica.fit(adata.X, n_runs = n_runs)
     X = adata.X.copy()
     X -= np.mean(X, axis=0)
     sICA = StabilizedICA(n_components=n_comps, max_iter=2000, n_jobs=-1)
-    sICA.fit(X.T, n_runs=100, plot=False, normalize=True, fun="logcosh")
+    for i in range(max_trials):
+        try:
+            sICA.fit(X.T, n_runs=100, plot=False, normalize=True, fun="logcosh")
+        except ValueError:
+            if verbose:
+                print("*- ICA did not converge. Retrying...")
+            continue
+        break
+    if verbose:
+        print("-- Done")
     return {"obj": sICA, "dimred": X @ sICA.S_.T}
 
 

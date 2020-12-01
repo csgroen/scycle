@@ -10,3 +10,4 @@ from ._remap_nodes import remap_nodes
 from ._pseudotime import pseudotime
 from ._cell_cycle_phase import cell_cycle_phase
 from ._annotate_cell_cycle import annotate_cell_cycle
+from ._integration import integration

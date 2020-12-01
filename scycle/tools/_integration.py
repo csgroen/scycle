@@ -8,10 +8,12 @@ from ot import dist, sinkhorn
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
+from ._enrich_components import enrich_components
+
 
 def integration(
-    adata_source: AnnData,
-    adata_reference: AnnData,
+    _adata_src: AnnData,
+    _adata_ref: AnnData,
     components: list = [],
     metric: str = "sqeuclidean",
     eps=1e-3,
@@ -25,13 +27,13 @@ def integration(
 
     Parameters
     ----------
-    adata_source: AnnData
+    adata_src: AnnData
         The dataset to align.
     adata_target: AnnData
         The dataset to use as a reference.
-    obsm_key: str
-        String identifier for accessing the low-dimension matrix.
-        This is used as a AnnData.obsm[$obsm_key]
+    components: list
+        ICs indices caring cell-cycle related information. Let
+        it empty for automatic detection.
     metric: str, optional
         Metric to use for computing the cost matrix, passed as
         an argument to scipy.spatial.distance.cdist. Default is
@@ -44,41 +46,66 @@ def integration(
 
     """
     assert (
-        "dimRed" in adata_reference.uns
+        "dimRed" in _adata_ref.uns
     ), "ICA projection matrix missing in source AnnData. \
         Dimensionality reduction must be computed first."
-    assert (
-        "enrich_components" in adata_reference.uns
-    ), "Components must be enriched first."
+
+    # Selecting the cell-cycle ICs components
+    if len(components) == 0:
+        if verbose:
+            print("-- Automatically detecting cell-cycle components...")
+        enrich_components(_adata_ref)
+        components = list(_adata_ref.uns["scycle"]["enrich_components"].values())
 
     if verbose:
-        print("-- Integrating datasets")
+        print("-- Integrating datasets...")
 
-    if "X_dimRed" not in adata_reference.obsm:
+    # Filtering only common genes
+    if verbose:
+        print("> Selecting common genes...")
+    src_genes = _adata_src.var_names
+    ref_genes = _adata_ref.var_names
+    common_genes = [g for g in ref_genes if g in src_genes]
+    if verbose:
+        print("> %i genes selected." % len(common_genes))
+        print("> Slicing matrices...")
+    genes_idx, idx = [], 0
+    for i, g in enumerate(ref_genes):
+        if common_genes[idx] == g:
+            genes_idx.append(i)
+            idx += 1
+    adata_ref = _adata_ref[:, common_genes]
+    adata_src = _adata_src[:, common_genes]
+
+    # Projecting both datasets in the same ICs subspace
+    if "X_dimRed" not in adata_ref.obsm:
         if verbose:
             print("> Projecting reference dataset...")
-        adata_reference.obsm["X_dimRed"] = adata_reference.uns["dimRed"].transform(
-            adata_reference.X
-        )
+        Y_c = adata_ref.X.copy()
+        Y_c -= np.mean(Y_c, axis=0)
+        adata_ref.obsm["X_dimRed"] = Y_c @ (adata_ref.uns["dimRed"].S_.T)[genes_idx, :]
 
-    print("> Projecting source dataset...")
-    adata_source.obsm["X_dimRed"] = adata_reference.uns["dimRed"].transform(
-        adata_source.X
-    )
+    X_c = adata_src.X.copy()
+    X_c -= np.mean(X_c, axis=0)
+    adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.uns["dimRed"].S_.T)[genes_idx, :]
 
-    Xs: np.ndarray = adata_source.obsm["X_dimRed"]
-    Xt: np.ndarray = adata_reference.obsm["X_dimRed"]
+    Xs: np.ndarray = adata_src.obsm["X_dimRed"]
+    Xt: np.ndarray = adata_ref.obsm["X_dimRed"]
 
-    if len(components) > 0:
-        Xs = Xs[:, components]
-        Xt = Xt[:, components]
+    Xs = Xs[:, components]
+    Xt = Xt[:, components]
 
-    adata_source.obsm["X_dimRed"] = _raw_ot_integration(
+    _adata_src.obsm["X_4ICs"] = _raw_ot_integration(
         Xs, Xt, metric=metric, eps=eps, verbose=verbose
     )
+    _adata_ref.obsm["X_4ICs"] = Xt
 
-    pca = PCA(n_components=2, svd_solver="arpack")
-    adata_source.obsm["X_dimRed2d"] = pca.fit_transform(adata_source.obsm["X_dimRed"])
+    if verbose:
+        print("-- Done")
+
+    # -- Improve X_dimRed2d so that all datasets are expressed in the same {PC} subspace
+    # pca = PCA(n_components=2, svd_solver="arpack")
+    # adata_src.obsm["X_dimRed2d"] = pca.fit_transform(adata_src.obsm["X_dimRed"])
 
 
 def _raw_ot_integration(
@@ -99,10 +126,13 @@ def _raw_ot_integration(
     )
 
     w_x, w_y = np.ones((n,)) / n, np.ones((m,)) / m
-    print("> Computing distance matrix...")
+    if verbose:
+        print("> Computing distance matrix...")
     M = dist(Xs, Xt, metric=metric)
     M /= M.max()
-    print("> Computing optimal transport plan...")
+    if verbose:
+        print("> Computing optimal transport plan...")
     Gs = sinkhorn(w_x, w_y, M, eps)
-    print("> Projecting source dataset...")
+    if verbose:
+        print("> Projecting source dataset...")
     return np.diag(1 / w_x) @ Gs @ Xt
