@@ -29,6 +29,7 @@ def celldiv_moment (adata: AnnData, var = 'total_counts', verbose: bool= True):
     pc_gr = adata.uns['princirc_gr']
     edges = pc_gr['edges'] 
     #-- Get var per node / diff_var 
+    
     edges['mean_var'] = adata.obs.groupby('partition').mean()[var]
     diff_var = np.zeros(len(edges))
     for i in range(len(edges)-1):

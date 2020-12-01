@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.decomposition import PCA
 from ..data import (
     g2m_markers,
     g1s_markers,
@@ -45,7 +46,23 @@ def enrich_components(adata, verbose=True):
     histone_scores[g2mi_idx] = 0
 
     histone_idx = np.argmax(histone_scores)
-
+    
+    #-- Print if verbose
+    if verbose:
+        print('--- Selected components:',
+              'G1/S: ' + str(g1s_idx),
+              'G2/M: ' + str(g2m_idx),
+              'G2/M-: ' + str(g2mi_idx),
+              'Histones: ' + str(histone_idx), sep = '\n')
+    
+    #-- Update dimRed, dimRed2d
+    xdr = adata.obsm['X_dimRed']
+    xdr = xdr[:,[g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
+    xdr2d = PCA(n_components = 3).fit_transform(xdr)
+    
+    adata.obsm['X_dimRed'] = xdr
+    adata.obsm['X_dimRed3d'] = xdr2d
+    
     # -- Return
     adata.uns["scycle"]["enrich_components"] = {
         "G1/S": g1s_idx,

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import elpigraph
 from anndata import AnnData
+from sklearn.decomposition import PCA
 
 def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     """ Calculates the principal circle nodes and edges for estimation of
@@ -24,7 +25,7 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    X_emb = adata.obsm['X_dimRed2d'].astype(np.float64)
+    X_emb = adata.obsm['X_dimRed'].astype(np.float64)
     n_dims = X_emb.shape[1]
         
     X_elpigraph_training = X_emb
@@ -59,6 +60,18 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     
     edge_data = pd.DataFrame({'e1': e1, 'e2': e2, 'mean_counts': node_read_counts})
     
+    #-- Project in 3d
+    pca = PCA(n_components = 3).fit(adata.obsm['X_dimRed'])
+    node3d = pd.DataFrame(pca.transform(node_coords.iloc[:,0:n_dims]))
+    node3d.columns = ['x', 'y', 'z']
+    node3d['npos'] = range(n_nodes)
+    edge3d = pd.DataFrame(pca.transform(edge_coords.iloc[:,2:(n_dims+2)]))
+    edge3d.columns = ['x', 'y', 'z']
+    edge3d['eid'] = range(n_nodes+1)
+    
+    node_coords = node_coords.merge(node3d, how = 'left', on = 'npos')
+    edge_coords = edge_coords.merge(edge3d, how = 'left', on = 'eid')
+    
     #-- Add to adata
     adata.uns['princirc_gr'] = {'node_coords': node_coords, 'edge_coords': edge_coords, 'edges': edge_data}
     adata.uns['scycle']['principal_circle'] = {'n_nodes': n_nodes}
@@ -66,9 +79,8 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
 def _get_gr_coords (adata):
     # Get the node coordinates
     node_p = adata.uns['egr']['NodePositions']
-    node_coords = pd.DataFrame()
-    node_coords['x'] = node_p[:,0]
-    node_coords['y'] = node_p[:,1]
+    node_coords = pd.DataFrame(node_p)
+    node_coords.columns = ['dim'+str(i) for i in node_coords.columns]
     node_coords['nid'] = range(len(node_coords.index))
     # Get edges
     edges = pd.DataFrame(adata.uns['egr']['Edges'][0], columns = ['e1', 'e2'])
@@ -80,6 +92,7 @@ def _get_gr_coords (adata):
                                 'npos': range(len(node_order))})
     #-- Add node positions
     node_coords = node_coords.merge(node_ord_df, how = 'left', on = 'nid')
+    node_coords = node_coords.sort_values('npos')
     
     return node_coords, edge_coords
 
