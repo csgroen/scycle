@@ -53,7 +53,6 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
     else:
         cdir = cycle_direction
     
-      
     #-- Remapping edges and nodes
     if verbose: print('Remapping edges using', div_edge, '...')
         
