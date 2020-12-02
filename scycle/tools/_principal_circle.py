@@ -25,7 +25,7 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    X_emb = adata.obsm['X_dimRed'].astype(np.float64)
+    X_emb = adata.obsm['X_4ICs'] if 'X_4ICs' in adata.obsm.keys() else adata.obsm['X_dimRed']
     n_dims = X_emb.shape[1]
         
     X_elpigraph_training = X_emb
@@ -61,7 +61,7 @@ def principal_circle (adata: AnnData, n_nodes: int=30, verbose: bool=True):
     edge_data = pd.DataFrame({'e1': e1, 'e2': e2, 'mean_counts': node_read_counts})
     
     #-- Project in 3d
-    pca = PCA(n_components = 3).fit(adata.obsm['X_dimRed'])
+    pca = PCA(n_components = 3).fit(X_emb)
     node3d = pd.DataFrame(pca.transform(node_coords.iloc[:,0:n_dims]))
     node3d.columns = ['x', 'y', 'z']
     node3d['npos'] = range(n_nodes)

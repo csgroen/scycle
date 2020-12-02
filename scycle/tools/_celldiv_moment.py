@@ -45,7 +45,7 @@ def celldiv_moment (adata: AnnData, var = 'total_counts', verbose: bool= True):
         coef1 = _edgeRegCoefficient(edges, end_edge = sugg_edge[0])
         coef2 = _edgeRegCoefficient(edges, start_edge = sugg_edge[0])
         
-        direction = -1 if (coef1 < 0)[0] | (coef2 < 0)[0] else 1
+        direction = -1 if (coef1 < 0)[0] & (coef2 > 0)[0] else 1
     else:
         coef = _edgeRegCoefficient(edges)
         direction = 1 if (coef > 0)[0] else -1

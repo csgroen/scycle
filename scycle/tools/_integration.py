@@ -17,7 +17,6 @@ def integration(
     components: list = [],
     metric: str = "sqeuclidean",
     eps=1e-3,
-    new_obsm: str = "X_integrated",
     verbose: bool = False,
 ):
     """
@@ -41,9 +40,6 @@ def integration(
     eps: float, optional
         Error threshold for the sinkhorn algorithm. Tune it if
         encountering overflow/convergence issues.
-    new_obsm: str, optional
-        Key for source_adata.obsm into which store the integrated matrix.
-
     """
     assert (
         "dimRed" in _adata_ref.uns
@@ -54,7 +50,8 @@ def integration(
     if len(components) == 0:
         if verbose:
             print("-- Automatically detecting cell-cycle components...")
-        enrich_components(_adata_ref)
+        if 'enrich_components' not in _adata_ref.uns['scycle'].keys():
+            enrich_components(_adata_ref)
         components = list(_adata_ref.uns["scycle"]["enrich_components"].values())
 
     if verbose:
@@ -90,22 +87,36 @@ def integration(
     adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.uns["P_dimRed"].T)[genes_idx, :]
 
     Xs: np.ndarray = adata_src.obsm["X_dimRed"]
-    Xt: np.ndarray = adata_ref.obsm["X_dimRed"]
+    Xt: np.ndarray = adata_ref.obsm["X_4ICs"]
 
     Xs = Xs[:, components]
-    Xt = Xt[:, components]
 
+    #-- Update objects
     _adata_src.obsm["X_4ICs"] = _raw_ot_integration(
         Xs, Xt, metric=metric, eps=eps, verbose=verbose
     )
     _adata_ref.obsm["X_4ICs"] = Xt
+    _adata_src.obsm['X_dimRed'] = adata_src.obsm['X_dimRed']
 
     if verbose:
         print("-- Done")
 
-    # -- Improve X_dimRed2d so that all datasets are expressed in the same {PC} subspace
-    # pca = PCA(n_components=2, svd_solver="arpack")
-    # adata_src.obsm["X_dimRed2d"] = pca.fit_transform(adata_src.obsm["X_dimRed"])
+    # -- Improve X_dimRed3d so that all datasets are expressed in the same {PC} subspace
+    pca = PCA(n_components=3, svd_solver="arpack")
+    _adata_src.obsm["X_dimRed3d"] = pca.fit_transform(_adata_src.obsm["X_4ICs"])
+    
+    #-- Add integration arguments
+    ref_dimred = _adata_ref.uns['scycle']['dimRed']
+    ref_dimred['run_on_reference'] = True
+    
+    _adata_src.uns['scycle']['dimRed'] = ref_dimred
+    _adata_src.uns['P_dimRed'] = _adata_ref.uns['P_dimRed']
+    
+    _adata_src.uns['scycle']['integration'] = dict(
+            components = components,
+            metric = metric,
+            eps=eps
+            )
 
 
 def _raw_ot_integration(

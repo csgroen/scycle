@@ -118,11 +118,11 @@ def dimensionality_reduction(
     adata.uns["dimRed"] = dimred_res["obj"]
     adata.uns["P_dimRed"] = dimred_res["pMatrix"]
 
-    # -- 2D
-    pca_dimRed = PCA(n_components=2)
+    # -- 3D
+    pca_dimRed = PCA(n_components=3)
     pca_dimRed.fit(X_dimRed)
 
-    adata.obsm["X_dimRed2d"] = pca_dimRed.transform(X_dimRed)
+    adata.obsm["X_dimRed3d"] = pca_dimRed.transform(X_dimRed)
     adata.uns["scycle"]["dimRed"] = {
         "method": method,
         "features": genes,

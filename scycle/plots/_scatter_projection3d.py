@@ -1,5 +1,7 @@
 import plotly.graph_objs as go
+import plotly.express as px
 import numpy as np
+import pandas as pd
 
 def scatter_projection3d(adata,
                          col_var = 'total_counts', size = 5,
@@ -53,13 +55,17 @@ def scatter_projection3d(adata,
     z = adata.obsm['X_dimRed3d'][:,2]
     col = adata.obs[col_var].values
     
-    fig = go.Figure(data = go.Scatter3d(
-                            x=x, y=y, z=z, mode = 'markers',
-                            marker=dict(size = size,
-                                            color = col,
-                                            colorscale = palette,
-                                            opacity = alpha)))
+    plotdf = pd.DataFrame(dict(x = x, y = y, z = z, col = col))
+    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var}, 
+                        color_continuous_scale = palette)
     
+    if type(col[0]) == str:
+        fig.update_traces(marker = dict(size = size,
+                                        opacity = alpha))
+    else:
+        fig.update_traces(marker = dict(size = size,
+                                        opacity = alpha))
+        
     if trajectory and 'principal_circle' in adata.uns['scycle'].keys():
         xn = adata.uns['princirc_gr']['node_coords']['x'].values
         xn = np.append(xn, xn[0])
@@ -80,7 +86,8 @@ def scatter_projection3d(adata,
                                            line = dict(
                                                color = 'black'
                                                ),
-                                           text = npos))
+                                           text = npos,
+                                           name = 'trajectory'))
     if show_nid: 
         fig.update_layout(scene = dict(xaxis_title = 'PC1', 
                                        yaxis_title = 'PC2', 

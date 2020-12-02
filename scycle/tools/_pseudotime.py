@@ -29,11 +29,13 @@ def pseudotime(adata: AnnData, scale: bool=True, remap_border = False, border_th
     """                
     #-- Get input data
     pr_gr = adata.uns['princirc_gr']
-    X_emb = adata.obsm['X_dimRed2d']
+    X_emb = adata.obsm['X_4ICs'] if 'X_4ICs' in adata.obsm.keys() else adata.obsm['X_dimRed']
+    X_emb = np.array(X_emb)
     n_dims = X_emb.shape[1]
     node_p = np.array(pr_gr['node_coords'].iloc[:,0:n_dims])
     n_nodes = len(node_p)
-    edges = np.array(pr_gr['edge_tree']); edges = np.vstack((edges, [0, n_nodes-1]))
+    # edges = np.array(pr_gr['edge_tree']);
+    edges = np.array(pr_gr['edges'].iloc[:,0:2]) # [0:(n_nodes-1),:]
     partition = adata.obs['partition']
     X_counts = adata.obs['total_counts']
     

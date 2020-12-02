@@ -55,13 +55,13 @@ def enrich_components(adata, verbose=True):
               'G2/M-: ' + str(g2mi_idx),
               'Histones: ' + str(histone_idx), sep = '\n')
     
-    #-- Update dimRed, dimRed2d
+    #-- Update dimRed, dimRed3d
     xdr = adata.obsm['X_dimRed']
     xdr = xdr[:,[g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
-    xdr2d = PCA(n_components = 3).fit_transform(xdr)
+    xdr3d = PCA(n_components = 3).fit_transform(xdr)
     
-    adata.obsm['X_dimRed'] = xdr
-    adata.obsm['X_dimRed3d'] = xdr2d
+    adata.obsm['X_4ICs'] = xdr
+    adata.obsm['X_dimRed3d'] = xdr3d
     
     # -- Return
     adata.uns["scycle"]["enrich_components"] = {
