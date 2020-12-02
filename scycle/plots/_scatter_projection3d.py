@@ -56,10 +56,16 @@ def scatter_projection3d(adata,
     col = adata.obs[col_var].values
     
     plotdf = pd.DataFrame(dict(x = x, y = y, z = z, col = col))
-    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var})
-    fig.update_traces(marker = dict(size = size,
+    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var}, 
+                        color_continuous_scale = palette)
+    
+    if type(col[0]) == str:
+        fig.update_traces(marker = dict(size = size,
                                         opacity = alpha))
-            
+    else:
+        fig.update_traces(marker = dict(size = size,
+                                        opacity = alpha))
+        
     if trajectory and 'principal_circle' in adata.uns['scycle'].keys():
         xn = adata.uns['princirc_gr']['node_coords']['x'].values
         xn = np.append(xn, xn[0])
@@ -87,10 +93,3 @@ def scatter_projection3d(adata,
                                        yaxis_title = 'PC2', 
                                        zaxis_title = 'PC3'))
     return fig
-
-
-def _map_cat2color(values, cats, colors):  
-    color_list = np.empty(len(values), dtype = '<U7')
-    for i in range(len(colors)):
-        color_list[values == cats[i]] = colors[i]
-    return color_list

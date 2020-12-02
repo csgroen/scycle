@@ -38,7 +38,7 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
     edges = pc_gr['edges']
     node_coords = pc_gr['node_coords']
     edge_coords = pc_gr['edge_coords']
-    X_emb = adata.obsm['X_dimRed2d']
+    X_emb = adata.obsm['X_4ICs'] if 'X_4ICs' in adata.obsm.keys() else adata.obsm['X_dimRed']
     n_dims = X_emb.shape[1]
     n_nodes = len(node_coords)
     

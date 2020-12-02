@@ -91,10 +91,12 @@ def integration(
 
     Xs = Xs[:, components]
 
+    #-- Update objects
     _adata_src.obsm["X_4ICs"] = _raw_ot_integration(
         Xs, Xt, metric=metric, eps=eps, verbose=verbose
     )
     _adata_ref.obsm["X_4ICs"] = Xt
+    _adata_src.obsm['X_dimRed'] = adata_src.obsm['X_dimRed']
 
     if verbose:
         print("-- Done")
