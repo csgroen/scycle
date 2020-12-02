@@ -83,11 +83,11 @@ def integration(
             print("> Projecting reference dataset...")
         Y_c = adata_ref.X.copy()
         Y_c -= np.mean(Y_c, axis=0)
-        adata_ref.obsm["X_dimRed"] = Y_c @ (adata_ref.uns["dimRed"].S_.T)[genes_idx, :]
+        adata_ref.obsm["X_dimRed"] = Y_c @ (adata_ref.uns["P_dimRed"].T)[genes_idx, :]
 
     X_c = adata_src.X.copy()
     X_c -= np.mean(X_c, axis=0)
-    adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.uns["dimRed"].S_.T)[genes_idx, :]
+    adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.uns["P_dimRed"].T)[genes_idx, :]
 
     Xs: np.ndarray = adata_src.obsm["X_dimRed"]
     Xt: np.ndarray = adata_ref.obsm["X_dimRed"]
