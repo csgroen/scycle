@@ -71,7 +71,13 @@ def scatter_projection(adata, col_var = 'total_counts',
         node_coords = adata.uns['princirc_gr']['node_coords']
         edge_coords = adata.uns['princirc_gr']['edge_coords']
     
-    # Add to plot    
+    # Add to plot
+        proj_plot = (proj_plot
+                       + geom_path(aes(x = 'x', y = 'y'), data = edge_coords)
+                       + geom_point(aes(x = 'x', y = 'y', color = 'total_counts'), 
+                  size = node_size,  data = node_coords)
+                    )
+    
         if node_color == 'total_counts':
                 proj_plot = (proj_plot
                                + geom_path(aes(x = 'x', y = 'y'), data = edge_coords)

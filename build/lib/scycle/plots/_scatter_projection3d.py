@@ -1,7 +1,5 @@
 import plotly.graph_objs as go
-import plotly.express as px
 import numpy as np
-import pandas as pd
 
 def scatter_projection3d(adata,
                          col_var = 'total_counts', size = 5,
@@ -55,11 +53,13 @@ def scatter_projection3d(adata,
     z = adata.obsm['X_dimRed3d'][:,2]
     col = adata.obs[col_var].values
     
-    plotdf = pd.DataFrame(dict(x = x, y = y, z = z, col = col))
-    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var})
-    fig.update_traces(marker = dict(size = size,
-                                        opacity = alpha))
-            
+    fig = go.Figure(data = go.Scatter3d(
+                            x=x, y=y, z=z, mode = 'markers',
+                            marker=dict(size = size,
+                                            color = col,
+                                            colorscale = palette,
+                                            opacity = alpha)))
+    
     if trajectory and 'principal_circle' in adata.uns['scycle'].keys():
         xn = adata.uns['princirc_gr']['node_coords']['x'].values
         xn = np.append(xn, xn[0])
@@ -80,17 +80,9 @@ def scatter_projection3d(adata,
                                            line = dict(
                                                color = 'black'
                                                ),
-                                           text = npos,
-                                           name = 'trajectory'))
+                                           text = npos))
     if show_nid: 
         fig.update_layout(scene = dict(xaxis_title = 'PC1', 
                                        yaxis_title = 'PC2', 
                                        zaxis_title = 'PC3'))
     return fig
-
-
-def _map_cat2color(values, cats, colors):  
-    color_list = np.empty(len(values), dtype = '<U7')
-    for i in range(len(colors)):
-        color_list[values == cats[i]] = colors[i]
-    return color_list

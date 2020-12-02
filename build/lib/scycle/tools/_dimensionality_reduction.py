@@ -90,8 +90,8 @@ def dimensionality_reduction(
 
         if method == "pca":
             dimred_res = _dimRed_pca(adata, n_comps=n_comps, verbose=verbose)
-        # elif method == "pcaCCgenes":
-        #    dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
+        elif method == "pcaCCgenes":
+            dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
         elif method == "ica":
             dimred_res = _dimRed_ica(
                 adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
@@ -102,8 +102,8 @@ def dimensionality_reduction(
             )
         # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
-        # elif method == "CCgenes":
-        #    dimred_res = _dimRed_CCgenes(adata, verbose=verbose)
+        elif method == "CCgenes":
+            dimred_res = _dimRed_CCgenes(adata, verbose=verbose)
         else:
             raise Exception(
                 (
@@ -116,13 +116,12 @@ def dimensionality_reduction(
     X_dimRed = dimred_res["dimred"]
     adata.obsm["X_dimRed"] = X_dimRed
     adata.uns["dimRed"] = dimred_res["obj"]
-    adata.uns["P_dimRed"] = dimred_res["pMatrix"]
 
-    # -- 3D
-    pca_dimRed = PCA(n_components=3)
+    # -- 2D
+    pca_dimRed = PCA(n_components=2)
     pca_dimRed.fit(X_dimRed)
 
-    adata.obsm["X_dimRed3d"] = pca_dimRed.transform(X_dimRed)
+    adata.obsm["X_dimRed2d"] = pca_dimRed.transform(X_dimRed)
     adata.uns["scycle"]["dimRed"] = {
         "method": method,
         "features": genes,
@@ -151,7 +150,7 @@ def _dimRed_pca(adata, n_comps, verbose=False):
     pca = PCA(n_components=n_comps)
     pca.fit(adata.X)
     X_dimRed = pca.transform(adata.X)
-    return {"obj": pca, "dimred": X_dimRed, "pMatrix": pca.components_}
+    return {"obj": pca, "dimred": X_dimRed}
 
 
 def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
@@ -171,7 +170,7 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
         break
     if verbose:
         print("-- Done")
-    return {"obj": sICA, "dimred": X @ sICA.S_.T, "pMatrix": sICA.S_}
+    return {"obj": sICA, "dimred": X @ sICA.S_.T}
 
 
 # def _dimRed_nmf(adata, n_comps, max_iter, seed, verbose = False):
@@ -182,11 +181,11 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
 #     return {'obj': nmf, 'dimred': X_dimRed}
 
 
-# def _dimRed_CCgenes(adata, verbose=False):
-#     if verbose:
-#         print("-- Dimensionality reduction using G1 and G2/M signatures...")
-#     X_dimRed = adata.obs.loc[:, ["G1", "G2-M"]]
-#     return {"obj": "CC_genes", "dimred": X_dimRed}
+def _dimRed_CCgenes(adata, verbose=False):
+    if verbose:
+        print("-- Dimensionality reduction using G1 and G2/M signatures...")
+    X_dimRed = adata.obs.loc[:, ["G1", "G2-M"]]
+    return {"obj": "CC_genes", "dimred": X_dimRed}
 
 
 # def _dimRed_CCA(adata, n_comps, cl_var, verbose = False):

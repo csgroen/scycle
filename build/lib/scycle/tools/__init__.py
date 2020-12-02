@@ -3,6 +3,7 @@
 
 from ._dimensionality_reduction import dimensionality_reduction
 from ._enrich_components import enrich_components
+from ._select_components import select_components
 from ._principal_circle import principal_circle
 from ._celldiv_moment import celldiv_moment
 from ._remap_nodes import remap_nodes
