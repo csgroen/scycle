@@ -10,3 +10,4 @@ from ._pseudotime import pseudotime
 from ._cell_cycle_phase import cell_cycle_phase
 from ._annotate_cell_cycle import annotate_cell_cycle
 from ._integration import integration
+from ._subtract_cc import subtract_cc
