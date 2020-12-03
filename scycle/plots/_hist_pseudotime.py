@@ -3,7 +3,7 @@
 from plotnine import ggplot, aes, geom_histogram, labs
 from ._themes import theme_std
 
-def hist_pseudotime(adata, fill = '#595959', alpha = 1):
+def hist_pseudotime(adata, fill = '#595959', alpha = 1, bins = 30):
     """Plots a histogram of pseudotime
     
     Parameters
@@ -13,7 +13,7 @@ def hist_pseudotime(adata, fill = '#595959', alpha = 1):
         evaluated by `tl.pseudotime`.
     fill: str
         Controls the color of the histogram bars. Must be a supported color
-        name of hex-code.
+        name or hex-code.
     alpha: float
         A float between 0 and 1. Controls the transparency of the bars.
         
@@ -23,11 +23,11 @@ def hist_pseudotime(adata, fill = '#595959', alpha = 1):
     """
     if fill in adata.obs.columns:
         hist_plt = (ggplot(adata.obs, aes('pseudotime', fill = fill))
-                    + geom_histogram(alpha = alpha))
+                    + geom_histogram(alpha = alpha, bins = bins))
     
     else:
         hist_plt = (ggplot(adata.obs, aes('pseudotime'))
-                    + geom_histogram(fill = fill, alpha = alpha))
+                    + geom_histogram(fill = fill, alpha = alpha, bins = bins))
         
     hist_plt = (hist_plt         
                 + labs(x = 'Pseudotime', y = 'Count')

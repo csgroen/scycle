@@ -33,7 +33,7 @@ def annotate_cell_cycle (adata: AnnData, s_start: Optional[float]=None,
         raise Exception('This object must be evaluated by `tl.cell_cycle_division` before `tl.annotate_cell_cycle`')
     
     if s_start == None:
-        s_start = adata.uns['scycle']['cell_cycle_division']['sphase_start']
+        s_start = adata.uns['scycle']['cell_cycle_division']['s_start']
     else:
         adata.uns['scycle']['cell_cycle_division']['sphase_start'] = s_start
     if g2_start == None:

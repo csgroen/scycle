@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 
 def scatter_projection3d(adata,
-                         col_var = 'total_counts', size = 5,
+                         col_var = 'total_counts', 
+                         size = 5,
                          palette = 'viridis', alpha = 0.7,
                          trajectory = False,  node_size = 10, 
                          node_color = 'lightgrey', show_nid = True): 
@@ -56,9 +57,10 @@ def scatter_projection3d(adata,
     col = adata.obs[col_var].values
     
     plotdf = pd.DataFrame(dict(x = x, y = y, z = z, col = col))
-    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var}, 
-                        color_continuous_scale = palette)
     
+    fig = px.scatter_3d(plotdf, x='x',y='y',z='z', color='col', labels = {'col': col_var}, 
+                            color_continuous_scale = palette)
+
     if type(col[0]) == str:
         fig.update_traces(marker = dict(size = size,
                                         opacity = alpha))

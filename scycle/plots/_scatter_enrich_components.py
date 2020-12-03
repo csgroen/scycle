@@ -54,7 +54,7 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
         
         idx = [i not in list(comps.keys()) for i in ic_trajm['IC']]
         ic_trajm['ccIC'] = 'cell cycle IC'
-        ic_trajm['ccIC'][idx] = 'other'
+        ic_trajm.loc[idx,'ccIC'] = 'other'
         
         #-- Get colors
         cmap = mpl.cm.get_cmap(palette, n_ics)
@@ -71,7 +71,8 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
          + scale_alpha_manual(values = [1,0.2], name = 'IC type')
          + scale_size_manual(values = [1.5,1], name = 'IC type')
          + scale_color_manual(values = cc_cols)
-         + labs(x = 'Trajectory', y = 'IC score'))
+         + labs(x = 'Trajectory', y = 'IC score')
+         + theme_std)
     
     elif plot_type == 'panel':
         #-- Add variables for mapping plotting

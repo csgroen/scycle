@@ -7,6 +7,7 @@ from plotnine import theme_light, theme, element_blank
 theme_std = theme_light() + theme(panel_grid=element_blank())
 
 def scatter_projection(adata, col_var = 'total_counts',
+                       shape_var = None,
                        palette = 'viridis', size = 1.5, alpha = 0.7,
                        trajectory = False,  
                        node_size = 7, node_color = 'lightgrey', show_nid = True):
@@ -20,6 +21,8 @@ def scatter_projection(adata, col_var = 'total_counts',
         evaluated by `tl.dimensionality_reduction`
     col_var: str
         The variable to be used to color the points. Must be present in adata.obs
+    shape_var: str
+        The variable to be mapped to the shape of the points. Must be present in adata.obs
     palette: str
         A `cmap` palette to be used for coloring the scatterplot.
     size: float
@@ -57,10 +60,18 @@ def scatter_projection(adata, col_var = 'total_counts',
     plot_data[col_var] = adata.obs[col_var].values
 
     # Plot
-    proj_plot = (ggplot(plot_data, aes('PCA', 'PCB'))
-     + geom_point(aes(color = col_var), size = size, alpha = alpha)
-     + theme_std
-     + labs(x = ax_names[0], y = ax_names[1]))
+    if shape_var is None:
+        proj_plot = (ggplot(plot_data, aes('PCA', 'PCB'))
+         + geom_point(aes(color = col_var), size = size, alpha = alpha)
+         + theme_std
+         + labs(x = ax_names[0], y = ax_names[1]))
+    else:
+        plot_data[shape_var] = adata.obs[shape_var].values
+        proj_plot = (ggplot(plot_data, aes('PCA', 'PCB'))
+         + geom_point(aes(color = col_var, shape = shape_var), size = size, alpha = alpha)
+         + theme_std
+         + labs(x = ax_names[0], y = ax_names[1]))
+        
         
     # Palettes
     if palette != 'viridis':

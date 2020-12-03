@@ -14,10 +14,7 @@ def dimensionality_reduction(
     adata: AnnData,
     method: str = "pcaCCgenes",
     n_comps: int = 30,
-    decomposition=None,
-    decomposition_features=None,
-    choose_comps=None,
-    sig_names: list = ["G1", "S-phase", "Histones", "G2-M"],
+    sig_names: list = ["S-phase", "G2-M"],
     seed: Optional[int] = None,
     max_iter: int = 200,
     verbose: bool = True,
@@ -31,22 +28,14 @@ def dimensionality_reduction(
         pp.prep_simple or pp.prep_pooling.
     method: str
         Method of dimensionality reduction, currently one of: 'pca', 'ica',
-        'pcaCCgenes','icaCCgenes', 'nmf', 'nmfCCgenes',
-        'CCgenes'.
+        'pcaCCgenes','icaCCgenes','CCgenes'.
         The 'CCgenes' variant use the methods only on the set of cell-cycle genes.
         'CCgenes' uses the G1-S and G2-M signature scores as the reduced dimensions.
     n_comps: int
         Number of components to use for the dimensionality reduction.
-    decomposition:
-        A `decomposition` object with a `transform` method, to be used as a reference
-        for the dimensionality reduction. If `decomposition` is not None, other
-        that are not `features`, `choose_comps` or `n_comps` will be ignored.
-    choose_comps: bool
-        If
-
     sig_names: list
-        Used only for 'pcaCCgenes' or 'icaCCgenes'. List of signature names
-        to reference as 'cell-cycle genes'.
+        Used only for 'CCgenes'. List of signature names to use as reference
+        cell cycle dimensions. Must be present as scores per sample in adata.obs
     seed: int
         Sets up the random state for FastICA and NMF for results reproducibility.
         Used for 'nmf', 'ica', 'nmfCCgenes' and 'icaCCgenes' methods.
@@ -67,51 +56,38 @@ def dimensionality_reduction(
                 "Data needs to be pre-processed by `pp.prep_pooling`"
                 + "or `pp.prep_simple`, before dimensionality reduction"
             )
-        )
-
-    if decomposition is not None:
-        ccomps = (
-            range(decomposition.n_components) if choose_comps is None else choose_comps
-        )
-        genes = (
-            np.array(adata.var.index)
-            if decomposition_features is None
-            else decomposition_features
-        )
-        all_feats = np.array(adata.var.index)
-        idx = [np.where(all_feats == gene)[0][0] for gene in genes]
-        dimred_res = _dimRed_decomp(adata, decomposition, idx, ccomps)
+        ) 
+        
+    if "CCgenes" in method:
+        adata_cc = _adata_CCgenes(adata, sig_names)
+        genes = np.array(adata_cc.var.index)
     else:
-        if "CCgenes" in method:
-            adata_cc = _adata_CCgenes(adata)
-            genes = np.array(adata_cc.var.index)
-        else:
-            genes = np.array(adata.var.index)
+        genes = np.array(adata.var.index)
 
-        if method == "pca":
-            dimred_res = _dimRed_pca(adata, n_comps=n_comps, verbose=verbose)
+    if method == "pca":
+        dimred_res = _dimRed_pca(adata, n_comps=n_comps, verbose=verbose)
         # elif method == "pcaCCgenes":
         #    dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
-        elif method == "ica":
-            dimred_res = _dimRed_ica(
-                adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
-            )
-        elif method == "icaCCgenes":
-            dimred_res = _dimRed_ica(
-                adata_cc, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
-            )
+    elif method == "ica":
+        dimred_res = _dimRed_ica(
+            adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
+        )
+    elif method == "icaCCgenes":
+        dimred_res = _dimRed_ica(
+            adata_cc, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
+        )
         # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == "CCgenes":
         #    dimred_res = _dimRed_CCgenes(adata, verbose=verbose)
-        else:
-            raise Exception(
-                (
-                    "Not one of the supported methods.\n"
-                    + "Must be one of: pca, ica, nmf, pcaCCgenes, icaCCgenes"
-                    + "nmfCCgenes, CCgenes"
-                )
+    else:
+        raise Exception(
+            (
+                "Not one of the supported methods.\n"
+                + "Must be one of: pca, ica, nmf, pcaCCgenes, icaCCgenes"
+                + "nmfCCgenes, CCgenes"
             )
+        )
 
     X_dimRed = dimred_res["dimred"]
     adata.obsm["X_dimRed"] = X_dimRed
@@ -121,8 +97,9 @@ def dimensionality_reduction(
     # -- 3D
     pca_dimRed = PCA(n_components=3)
     pca_dimRed.fit(X_dimRed)
-
+    
     adata.obsm["X_dimRed3d"] = pca_dimRed.transform(X_dimRed)
+
     adata.uns["scycle"]["dimRed"] = {
         "method": method,
         "features": genes,
@@ -131,9 +108,11 @@ def dimensionality_reduction(
     }
 
 
-def _adata_CCgenes(adata):
+def _adata_CCgenes(adata, sig_names):
     # -- Get CC genes
-    cc_sigs = cellcycle_signatures()
+    cc_sigs = cellcycle_signatures()[sig_names]
+    cc_sigs = {sign: cc_sigs[sign] for sign in sig_names}
+
     flat_sigs = [
         item for sublist in [v for k, v in cc_sigs.items()] for item in sublist
     ]
