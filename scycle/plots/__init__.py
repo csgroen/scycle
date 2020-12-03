@@ -8,3 +8,4 @@ from ._scatter_cell_cycle import scatter_cell_cycle
 from ._scatter_projection import scatter_projection
 from ._scatter_projection3d import scatter_projection3d
 from ._scatter_pseudotime import scatter_pseudotime
+from ._scatter_enrich_components import scatter_enrich_components
