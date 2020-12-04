@@ -28,4 +28,4 @@ g2m_inhibitory_markers = [
     "CENPW",
     "CDC20",
 ]
-histone_markers = ["HIST1H4C", "HIST1H1E", "HIST2H2AC", "HIST1H1C"]
+histone_markers = ["HIST1H4C", "HIST1H1E", "HIST2H2AC", "HIST1H1C","H4C3","H1-4","H2AC20","H1-2"]
