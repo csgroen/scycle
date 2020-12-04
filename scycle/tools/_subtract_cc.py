@@ -27,6 +27,6 @@ def subtract_cc(adata):
 
     # Computing residues, subtracting cell cycle influence
     residue_matrix = means[partition, :]
-    adata.obsm.residue_matrix = residue_matrix
+    adata.obsm["residue_matrix"] = residue_matrix
     adata.X = X - residue_matrix
-    adata.uns.r2_scores = np.var(residue_matrix, axis=0) / np.var(X, axis=0)
+    adata.var["r2_scores"] = np.var(residue_matrix, axis=0) / np.var(X, axis=0)
