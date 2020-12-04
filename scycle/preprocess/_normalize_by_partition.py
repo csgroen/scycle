@@ -10,21 +10,22 @@ from ._prep_simple import quality_control
 from ._prep_pooling import prep_pooling
 from ..tools import dimensionality_reduction, enrich_components, principal_circle
 
-def normalize_by_partition(adata_src, adata_ref,
-                           rerun_pc = True, 
-                           n_ref_parts = 10, 
-                           verbose = True):
-    
-    """ Normalize samples by median partition library size
-     
+
+def normalize_by_partition(
+    adata_src, adata_ref=None, rerun_pc=True, n_ref_parts=10, verbose=True
+):
+
+    """Normalize samples by median partition library size
+
      This procedure improves the discovery of the cell division moment.
-    
+
     Parameters
     ------------
     adata_src: AnnData
         Unprocessed AnnData
     adata_ref: AnnData
-        Reference AnnData object, that has been processed
+        Reference AnnData object, that has been processed. If None, src will be
+        automatically copied and preprocessed.
     rerun_pc: bool
         If True, `tl.principal circle` is re-run with n_ref_parts as n_nodes.
         Using fewer partitions for re-normalization than the default number used
@@ -33,71 +34,92 @@ def normalize_by_partition(adata_src, adata_ref,
     verbose: bool
         If True, the function will print messages.
 
-    """ 
-    pc_ran = 'principal_circle' not in adata_ref.uns['scycle'].keys()
-    
-    if (pc_ran | rerun_pc):
-        if verbose: print("-- Running `tl.principal_circle` with n_ref_parts...")
-        principal_circle(adata_ref, n_nodes = n_ref_parts, verbose = False)
-               
+    """
+    if adata_ref is None:
+        adata_ref = adata_src.copy()
 
-    #-- Run QC
-    params = adata_ref.uns['scycle']
-    pp_params = params['preprocess']
-    dr_params = params['dimRed']
+    if "scycle" not in adata_ref.uns:
+        print(
+            "Reference adata should be preprocessed... Doing it with default values..."
+        )
+        prep_pooling(adata_ref, verbose=verbose)
+        dimensionality_reduction(adata_ref, method="ica", verbose=verbose)
 
-    quality_control(adata_src,
-                    min_counts = pp_params['min_counts'], 
-                    max_counts = pp_params['max_counts'], 
-                    max_mt_ratio = pp_params['max_mt_ratio'],
-                    verbose = False)
-    old_totals = adata_src.obs['total_counts']
-    
-    #--- Apply filter
-    if verbose: print('Normalizing by partition...')
+    pc_ran = "principal_circle" not in adata_ref.uns["scycle"].keys()
 
-    #---- Get partitions and re-noralize
-    prt = adata_ref.obs['partition']
+    if pc_ran | rerun_pc:
+        if verbose:
+            print("-- Running `tl.principal_circle` with n_ref_parts...")
+        principal_circle(adata_ref, n_nodes=n_ref_parts, verbose=False)
+
+    # -- Run QC
+    params = adata_ref.uns["scycle"]
+    pp_params = params["preprocess"]
+    dr_params = params["dimRed"]
+
+    quality_control(
+        adata_src,
+        min_counts=pp_params["min_counts"],
+        max_counts=pp_params["max_counts"],
+        max_mt_ratio=pp_params["max_mt_ratio"],
+        verbose=False,
+    )
+    old_totals = adata_src.obs["total_counts"]
+
+    # --- Apply filter
+    if verbose:
+        print("Normalizing by partition...")
+
+    # ---- Get partitions and re-noralize
+    prt = adata_ref.obs["partition"]
     gexp = adata_src.X
-    
-    npart = np.max(prt)+1
+
+    npart = np.max(prt) + 1
     new_gexp = np.empty(gexp.shape)
-    for p in range(npart):
-        sidx = prt == p # sample index
-        totals = np.sum(gexp[sidx,:], axis = 1) # total counts per sample in group
-        median = np.median(totals) # median counts for samples in group
-        new_gexp[sidx,:] = gexp[sidx,:] / totals[:,None] * median
-        
-    #---- Re-run procedure
+    for p in range(int(npart)):
+        sidx = prt == p  # sample index
+        totals = np.sum(gexp[sidx, :], axis=1)  # total counts per sample in group
+        median = np.median(totals)  # median counts for samples in group
+        new_gexp[sidx, :] = gexp[sidx, :] / totals[:, None] * median
+
+    # ---- Re-run procedure
     adata_src.X = new_gexp
-    
-    if verbose: print('Re-running pooling...')
-    
-    prep_pooling(adata_src, 
-                 filter_cells = False,
-                 embed_n_comps=pp_params['embed_n_comps'],
-                 min_counts = pp_params['min_counts'], 
-                 max_counts = pp_params['max_counts'], 
-                 max_mt_ratio = pp_params['max_mt_ratio'],
-                 n_neighbors = pp_params['n_neighbors'],
-                 normalize_counts = False,
-                 filter_var_genes = pp_params['filter_var_genes'],
-                 log_transform= pp_params['log_transform'],
-                 n_top_genes = pp_params['n_top_genes'],
-                 verbose = False)
-    
-    if verbose: print('Re-running dimensionality reduction..')
-    dimensionality_reduction(adata_src,
-                             method = dr_params['method'],
-                             n_comps = dr_params['n_comps'],
-                             seed = dr_params['seed'],
-                             verbose = False)
-    if 'enrich_components' in params.keys():    
-        if verbose: print('Re-running component enrichment...')
-        enrich_components(adata_src, verbose = False)
-    
-    if verbose: print('Finding the principal circle...')
-    principal_circle(adata_src, verbose = False)
-    
-    adata_src.obs['total_counts'] = np.sum(adata_src.X, axis = 1)
-    adata_src.obs['total_counts_raw'] = old_totals
+
+    if verbose:
+        print("Re-running pooling...")
+
+    prep_pooling(
+        adata_src,
+        filter_cells=False,
+        embed_n_comps=pp_params["embed_n_comps"],
+        min_counts=pp_params["min_counts"],
+        max_counts=pp_params["max_counts"],
+        max_mt_ratio=pp_params["max_mt_ratio"],
+        n_neighbors=pp_params["n_neighbors"],
+        normalize_counts=False,
+        filter_var_genes=pp_params["filter_var_genes"],
+        log_transform=pp_params["log_transform"],
+        n_top_genes=pp_params["n_top_genes"],
+        verbose=False,
+    )
+
+    if verbose:
+        print("Re-running dimensionality reduction..")
+    dimensionality_reduction(
+        adata_src,
+        method=dr_params["method"],
+        n_comps=dr_params["n_comps"],
+        seed=dr_params["seed"],
+        verbose=False,
+    )
+    if "enrich_components" in params.keys():
+        if verbose:
+            print("Re-running component enrichment...")
+        enrich_components(adata_src, verbose=False)
+
+    if verbose:
+        print("Finding the principal circle...")
+    principal_circle(adata_src, verbose=False)
+
+    adata_src.obs["total_counts"] = np.sum(adata_src.X, axis=1)
+    adata_src.obs["total_counts_raw"] = old_totals
