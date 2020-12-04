@@ -64,10 +64,17 @@ def prep_simple(
     if log_transform:
         sc.pp.log1p(adata, base=10)
 
+
+
     if not for_pooling:
         adata.uns["scycle"] = {
             "preprocess": {
                 "method": "simple",
+                "n_top_genes": n_top_genes,
+                "normalize_counts": normalize_counts,
+                "filter_var_genes": filter_var_genes,
+                "division_factor": division_factor,
+                "log_transform": log_transform,
                 "n_top_genes": n_top_genes,
             }
         }

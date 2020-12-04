@@ -119,6 +119,12 @@ def prep_pooling(
             "method": "pooling",
             "n_neighbors": n_neighbors,
             "min_counts": min_counts,
+            "max_counts": max_counts,
+            "max_mt_ratio": max_mt_ratio,
+            "normalize_counts": normalize_counts,
+            "filter_var_genes": filter_var_genes,
+            "division_factor": division_factor,
+            "log_transform": log_transform,
             "n_top_genes": n_top_genes,
             "embed_n_comps": embed_n_comps,
         }

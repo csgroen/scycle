@@ -58,7 +58,7 @@ def dimensionality_reduction(
             )
         ) 
         
-    if "CCgenes" in method:
+    if method in ['pcaCCgenes', 'icaCCgenes']:
         adata_cc = _adata_CCgenes(adata, sig_names)
         genes = np.array(adata_cc.var.index)
     else:
@@ -72,10 +72,13 @@ def dimensionality_reduction(
         dimred_res = _dimRed_ica(
             adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
         )
-    elif method == "icaCCgenes":
-        dimred_res = _dimRed_ica(
-            adata_cc, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
+    elif method == 'pcaCCgenes':
+        dimred_res = _dimRed_pca(
+            adata_cc, n_comps=n_comps, verbose=verbose
         )
+    elif method == "icaCCgenes":
+        dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
+
         # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == "CCgenes":
@@ -85,7 +88,6 @@ def dimensionality_reduction(
             (
                 "Not one of the supported methods.\n"
                 + "Must be one of: pca, ica, nmf, pcaCCgenes, icaCCgenes"
-                + "nmfCCgenes, CCgenes"
             )
         )
 
@@ -110,7 +112,7 @@ def dimensionality_reduction(
 
 def _adata_CCgenes(adata, sig_names):
     # -- Get CC genes
-    cc_sigs = cellcycle_signatures()[sig_names]
+    cc_sigs = cellcycle_signatures()
     cc_sigs = {sign: cc_sigs[sign] for sign in sig_names}
 
     flat_sigs = [
