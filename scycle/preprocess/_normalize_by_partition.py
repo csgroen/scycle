@@ -8,7 +8,12 @@ Created on Fri Dec  4 16:50:39 2020
 import numpy as np
 from ._prep_simple import quality_control
 from ._prep_pooling import prep_pooling
-from ..tools import dimensionality_reduction, enrich_components, principal_circle
+from ..tools import (
+    dimensionality_reduction,
+    enrich_components,
+    principal_circle,
+    pseudotime,
+)
 
 
 def normalize_by_partition(
@@ -51,6 +56,7 @@ def normalize_by_partition(
         if verbose:
             print("-- Running `tl.principal_circle` with n_ref_parts...")
         principal_circle(adata_ref, n_nodes=n_ref_parts, verbose=False)
+        pseudotime(adata_ref, scale=False)
 
     # -- Run QC
     params = adata_ref.uns["scycle"]
@@ -71,55 +77,30 @@ def normalize_by_partition(
         print("Normalizing by partition...")
 
     # ---- Get partitions and re-noralize
+
     prt = adata_ref.obs["partition"]
     gexp = adata_src.X
 
     npart = np.max(prt) + 1
     new_gexp = np.empty(gexp.shape)
+    # computing median per partition
+    median_per_partition = np.array([0] * npart)
     for p in range(int(npart)):
         sidx = prt == p  # sample index
         totals = np.sum(gexp[sidx, :], axis=1)  # total counts per sample in group
-        median = np.median(totals)  # median counts for samples in group
-        new_gexp[sidx, :] = gexp[sidx, :] / totals[:, None] * median
+        median_per_partition[p] = np.median(
+            totals
+        )  # median counts for samples in group
 
-    # ---- Re-run procedure
-    adata_src.X = new_gexp
+    totals = np.sum(gexp, axis=1).reshape(len(gexp), 1)
+    next_prt = (prt + 1) % npart
+    offsets = adata_ref.obs["pseudotime"] - adata_ref.obs["pseudotime"].astype(int)
+    offsets = np.clip(offsets, 0, 1)
+    medians = (1 - offsets) * median_per_partition[
+        prt
+    ] + offsets * median_per_partition[next_prt]
 
-    if verbose:
-        print("Re-running pooling...")
-
-    prep_pooling(
-        adata_src,
-        filter_cells=False,
-        embed_n_comps=pp_params["embed_n_comps"],
-        min_counts=pp_params["min_counts"],
-        max_counts=pp_params["max_counts"],
-        max_mt_ratio=pp_params["max_mt_ratio"],
-        n_neighbors=pp_params["n_neighbors"],
-        normalize_counts=False,
-        filter_var_genes=pp_params["filter_var_genes"],
-        log_transform=pp_params["log_transform"],
-        n_top_genes=pp_params["n_top_genes"],
-        verbose=False,
-    )
-
-    if verbose:
-        print("Re-running dimensionality reduction..")
-    dimensionality_reduction(
-        adata_src,
-        method=dr_params["method"],
-        n_comps=dr_params["n_comps"],
-        seed=dr_params["seed"],
-        verbose=False,
-    )
-    if "enrich_components" in params.keys():
-        if verbose:
-            print("Re-running component enrichment...")
-        enrich_components(adata_src, verbose=False)
-
-    if verbose:
-        print("Finding the principal circle...")
-    principal_circle(adata_src, verbose=False)
+    adata_src.X = gexp / totals * np.array(medians).reshape(len(gexp), 1)
 
     adata_src.obs["total_counts"] = np.sum(adata_src.X, axis=1)
     adata_src.obs["total_counts_raw"] = old_totals
