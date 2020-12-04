@@ -77,7 +77,7 @@ def dimensionality_reduction(
             adata_cc, n_comps=n_comps, verbose=verbose
         )
     elif method == "icaCCgenes":
-        dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
+        dimred_res = _dimRed_ica(adata_cc, max_iter=max_iter, seed=seed,  n_comps=n_comps, verbose=verbose)
 
         # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
