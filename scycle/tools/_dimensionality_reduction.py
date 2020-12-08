@@ -5,7 +5,7 @@ from typing import Optional
 
 # from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
-from algorithms.stabilized_ICA import StabilizedICA
+from sica.base import StabilizedICA
 from anndata import AnnData
 from ..annot import cellcycle_signatures
 
@@ -56,9 +56,9 @@ def dimensionality_reduction(
                 "Data needs to be pre-processed by `pp.prep_pooling`"
                 + "or `pp.prep_simple`, before dimensionality reduction"
             )
-        ) 
-        
-    if method in ['pcaCCgenes', 'icaCCgenes']:
+        )
+
+    if method in ["pcaCCgenes", "icaCCgenes"]:
         adata_cc = _adata_CCgenes(adata, sig_names)
         genes = np.array(adata_cc.var.index)
     else:
@@ -72,12 +72,12 @@ def dimensionality_reduction(
         dimred_res = _dimRed_ica(
             adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
         )
-    elif method == 'pcaCCgenes':
-        dimred_res = _dimRed_pca(
-            adata_cc, n_comps=n_comps, verbose=verbose
-        )
+    elif method == "pcaCCgenes":
+        dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
     elif method == "icaCCgenes":
-        dimred_res = _dimRed_ica(adata_cc, max_iter=max_iter, seed=seed,  n_comps=n_comps, verbose=verbose)
+        dimred_res = _dimRed_ica(
+            adata_cc, max_iter=max_iter, seed=seed, n_comps=n_comps, verbose=verbose
+        )
 
         # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
         # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
@@ -99,7 +99,7 @@ def dimensionality_reduction(
     # -- 3D
     pca_dimRed = PCA(n_components=3)
     pca_dimRed.fit(X_dimRed)
-    
+
     adata.obsm["X_pc3"] = pca_dimRed.transform(X_dimRed)
 
     adata.uns["scycle"]["dimRed"] = {
