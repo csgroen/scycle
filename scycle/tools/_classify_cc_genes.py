@@ -19,13 +19,10 @@ def classify_genes_by_ic(adata, min_r2=0.5, verbose=False):
         )
         enrich_components(adata, verbose=verbose)
 
-    # Getting metagenes matrix
-    X_4ICs = adata.uns["P_dimRed"][
-        list(adata.uns["scycle"]["enrich_components"].values())
-    ].T
-
     # Computing most important IC for each gene
-    maxes = np.argmax(X_4ICs, axis=1)
+    components = list(adata.uns["scycle"]["enrich_components"].values())
+    is_4d = len(components) == 4
+    maxes = np.argmax(adata.uns["P_dimRed"][components, :], axis=0)
 
     # Correcting for histone genes
     var_startswith = adata.var_names.str.startswith
@@ -37,13 +34,14 @@ def classify_genes_by_ic(adata, min_r2=0.5, verbose=False):
             + var_startswith("H3")
             + var_startswith("H4")
         ).astype(bool)
-    ] = 3
+    ] = (3 if is_4d else 2)
 
     # trandforming ids -> str
     maxes = np.where(maxes == 0, "G1/S", maxes)
-    maxes = np.where(maxes == "1", "G2/M-", maxes)
-    maxes = np.where(maxes == "2", "G2/M+", maxes)
-    maxes = np.where(maxes == "3", "HIST", maxes)
+    maxes = np.where(maxes == "1", "G2/M+", maxes)
+    if is_4d:
+        maxes = np.where(maxes == "2", "G2/M-", maxes)
+    maxes = np.where(maxes == ("3" if is_4d else "2"), "HIST", maxes)
     maxes[adata.var["r2_scores"] < min_r2] = "unrelated"
 
     # writing in adata

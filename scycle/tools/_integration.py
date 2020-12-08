@@ -50,7 +50,7 @@ def integration(
     if len(components) == 0:
         if verbose:
             print("-- Automatically detecting cell-cycle components...")
-        if 'enrich_components' not in _adata_ref.uns['scycle'].keys():
+        if "enrich_components" not in _adata_ref.uns["scycle"].keys():
             enrich_components(_adata_ref)
         components = list(_adata_ref.uns["scycle"]["enrich_components"].values())
 
@@ -71,6 +71,8 @@ def integration(
         if common_genes[idx] == g:
             genes_idx.append(i)
             idx += 1
+            if idx >= len(common_genes):
+                break
     adata_ref = _adata_ref[:, common_genes]
     adata_src = _adata_src[:, common_genes]
 
@@ -87,36 +89,37 @@ def integration(
     adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.uns["P_dimRed"].T)[genes_idx, :]
 
     Xs: np.ndarray = adata_src.obsm["X_dimRed"]
-    Xt: np.ndarray = adata_ref.obsm["X_4ICs"]
+    Xt: np.ndarray = adata_ref.obsm["X_cc"]
 
     Xs = Xs[:, components]
 
-    #-- Update objects
-    _adata_src.obsm["X_4ICs"] = _raw_ot_integration(
+    # -- Update objects
+    _adata_src.obsm["X_cc"] = _raw_ot_integration(
         Xs, Xt, metric=metric, eps=eps, verbose=verbose
     )
-    _adata_ref.obsm["X_4ICs"] = Xt
-    _adata_src.obsm['X_dimRed'] = adata_src.obsm['X_dimRed']
+    _adata_ref.obsm["X_cc"] = Xt
+    _adata_src.obsm["X_dimRed"] = adata_src.obsm["X_dimRed"]
 
     if verbose:
         print("-- Done")
 
-    # -- Improve X_dimRed3d so that all datasets are expressed in the same {PC} subspace
-    pca = PCA(n_components=3, svd_solver="arpack")
-    _adata_src.obsm["X_dimRed3d"] = pca.fit_transform(_adata_src.obsm["X_4ICs"])
-    
-    #-- Add integration arguments
-    ref_dimred = _adata_ref.uns['scycle']['dimRed']
-    ref_dimred['run_on_reference'] = True
-    
-    _adata_src.uns['scycle']['dimRed'] = ref_dimred
-    _adata_src.uns['P_dimRed'] = _adata_ref.uns['P_dimRed']
-    
-    _adata_src.uns['scycle']['integration'] = dict(
-            components = components,
-            metric = metric,
-            eps=eps
-            )
+    # -- Improve X_pc3 so that all datasets are expressed in the same {PC} subspace
+    if Xt.shape[1] >= 4:
+        pca = PCA(n_components=3, svd_solver="arpack")
+        _adata_src.obsm["X_pc3"] = pca.fit_transform(_adata_src.obsm["X_cc"])
+    else:
+        _adata_src.obsm["X_pc3"] = _adata_src.obsm["X_cc"]
+
+    # -- Add integration arguments
+    ref_dimred = _adata_ref.uns["scycle"]["dimRed"]
+    ref_dimred["run_on_reference"] = True
+
+    _adata_src.uns["scycle"]["dimRed"] = ref_dimred
+    _adata_src.uns["P_dimRed"] = _adata_ref.uns["P_dimRed"]
+
+    _adata_src.uns["scycle"]["integration"] = dict(
+        components=components, metric=metric, eps=eps
+    )
 
 
 def _raw_ot_integration(

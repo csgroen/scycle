@@ -2,20 +2,32 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
-from plotnine import aes, geom_point, geom_line, geom_segment, geom_vline, geom_text, labs
+from plotnine import (
+    aes,
+    geom_point,
+    geom_line,
+    geom_segment,
+    geom_vline,
+    geom_text,
+    labs,
+)
 from plotnine.scales import scale_color_manual
 from ._scatter_pseudotime import scatter_pseudotime
 from scipy.stats import zscore
-pd.set_option('chained_assignment',None)
+
+pd.set_option("chained_assignment", None)
 
 
-def scatter_cell_cycle (adata, 
-                        scores = ['signatures', 'components'][0], 
-                        size = 1.5, alpha = 1, 
-                        curvature_shrink = 1,
-                        lab_ypos = 2):
+def scatter_cell_cycle(
+    adata,
+    scores=["signatures", "components"][0],
+    size=1.5,
+    alpha=1,
+    curvature_shrink=1,
+    lab_ypos=2,
+):
     """Plots cell cycle signatures vs pseudotime
-    
+
     Parameters
     ----------------
     adata: AnnData
@@ -31,70 +43,86 @@ def scatter_cell_cycle (adata,
         A value between 0 and 1. Controls point transparency.
     lab_ypos: float
         Controls the y-axis position of the cell cycle phase annotation.
-    
+
     Returns
     --------------
     A plotnine scatter plot of pseudotime vs 3 cell cycle signatures.
-    
+
     """
-    if scores == 'signatures':
-        y = ['S-phase', 'G2-M', 'Histones']
-        colors = ['#66c2a5', '#fc8d62', '#8da0cb', 'black']
-    elif scores == 'components':
+    if scores == "signatures":
+        y = ["S-phase", "G2-M", "Histones"]
+        colors = ["#66c2a5", "#fc8d62", "#8da0cb", "black"]
+    elif scores == "components":
         _add_compScores(adata)
-        y = ['G1/S comp', 'G2/M+ comp', 'G2/M- comp', 'Histones comp']
-        colors = ['#66c2a5', '#fc8d62', '#8da0cb','#e5c494', 'black']
-        
-    
-    time_scatter = (scatter_pseudotime(adata, y = y, size = size, alpha = alpha)
-            + labs(x = 'Pseudotime', y = 'Signature scores', color = 'Signature'))
+        y = ["G1/S comp", "G2/M+ comp", "G2/M- comp", "Histones comp"]
+        colors = ["#66c2a5", "#fc8d62", "#8da0cb", "#e5c494", "black"]
 
-    
-    #-- Add cell cycle annotations
-    if 'cell_cycle_division' in adata.uns['scycle']:
-        cc_divs = adata.uns['scycle']['cell_cycle_division']
-        
-        #-- Curvature data
-        curv_data = cc_divs['curvature']
-        curv = curv_data['curvature'].values
-        cvz = zscore(curv)/curvature_shrink
+    time_scatter = scatter_pseudotime(adata, y=y, size=size, alpha=alpha) + labs(
+        x="Pseudotime", y="Signature scores", color="Signature"
+    )
+
+    # -- Add cell cycle annotations
+    if "cell_cycle_division" in adata.uns["scycle"]:
+        cc_divs = adata.uns["scycle"]["cell_cycle_division"]
+
+        # -- Curvature data
+        curv_data = cc_divs["curvature"]
+        curv = curv_data["curvature"].values
+        cvz = zscore(curv) / curvature_shrink
         cvz = cvz - np.max(cvz)
-        curv_data.loc[:,'curvature'] = cvz
-        curv_data.loc[:,'signature'] = 'Curvature'
-        
-        #-- Peak data (for segments)
-        gr_min = np.min(curv_data['curvature'])
-        pk_data = curv_data[curv_data['ispeak'] == 'peak']
-        pk_data.loc[:,'ymin'] = gr_min
-        
-        #-- Cell cycle annotation
-        cc_phase = pd.DataFrame(dict(starts = [None, 
-                                               cc_divs['s_start'], 
-                                               cc_divs['g2_start'], 
-                                               cc_divs['m_start']],
-                             labels = ['G1', 'S', 'G2', 'M'],
-                             labpos = [np.mean([0, cc_divs['s_start']]), 
-                                       np.mean([cc_divs['s_start'], cc_divs['g2_start']]),
-                                       np.mean([cc_divs['g2_start'], cc_divs['m_start']]),
-                                       np.mean([cc_divs['m_start'], 1])],
-                             y = lab_ypos))
+        curv_data.loc[:, "curvature"] = cvz
+        curv_data.loc[:, "signature"] = "Curvature"
 
-        
-        cell_cycle_plt = (time_scatter
-         + geom_point(aes('pseudotime', 'curvature', color = 'signature'), data = curv_data)
-         + geom_line(aes('pseudotime', 'curvature'), data = curv_data)
-         + scale_color_manual(values = colors)
-         + geom_segment(aes(x = 'pseudotime', xend = 'pseudotime', y = 'ymin', yend = 'curvature'), 
-                        linetype = 'dotted', data = pk_data)
-         + geom_vline(aes(xintercept = 'starts'), linetype = 'dashed', data = cc_phase)
-         + geom_text(aes(x = 'labpos', y = 'y', label = 'labels'), data = cc_phase))
-    
+        # -- Peak data (for segments)
+        gr_min = np.min(curv_data["curvature"])
+        pk_data = curv_data[curv_data["ispeak"] == "peak"]
+        pk_data.loc[:, "ymin"] = gr_min
+
+        # -- Cell cycle annotation
+        cc_phase = pd.DataFrame(
+            dict(
+                starts=[
+                    None,
+                    cc_divs["s_start"],
+                    cc_divs["g2_start"],
+                    cc_divs["m_start"],
+                ],
+                labels=["G1", "S", "G2", "M"],
+                labpos=[
+                    np.mean([0, cc_divs["s_start"]]),
+                    np.mean([cc_divs["s_start"], cc_divs["g2_start"]]),
+                    np.mean([cc_divs["g2_start"], cc_divs["m_start"]]),
+                    np.mean([cc_divs["m_start"], 1]),
+                ],
+                y=lab_ypos,
+            )
+        )
+
+        cell_cycle_plt = (
+            time_scatter
+            + geom_point(
+                aes("pseudotime", "curvature", color="signature"), data=curv_data
+            )
+            + geom_line(aes("pseudotime", "curvature"), data=curv_data)
+            + scale_color_manual(values=colors)
+            + geom_segment(
+                aes(x="pseudotime", xend="pseudotime", y="ymin", yend="curvature"),
+                linetype="dotted",
+                data=pk_data,
+            )
+            + geom_vline(aes(xintercept="starts"), linetype="dashed", data=cc_phase)
+            + geom_text(aes(x="labpos", y="y", label="labels"), data=cc_phase)
+        )
+
         return cell_cycle_plt
     else:
         return time_scatter
-    
+
+
 def _add_compScores(adata):
-    adata.obs['G1/S comp'] = zscore(adata.obsm['X_4ICs'][:,0])
-    adata.obs['G2/M+ comp'] = zscore(adata.obsm['X_4ICs'][:,1])
-    adata.obs['G2/M- comp'] = zscore(adata.obsm['X_4ICs'][:,2])
-    adata.obs['Histones comp'] = zscore(adata.obsm['X_4ICs'][:,3])
+    is_4d = "G2/M-" in adata.uns["scycle"]["enrich_components"]
+    adata.obs["G1/S comp"] = zscore(adata.obsm["X_cc"][:, 0])
+    adata.obs["G2/M+ comp"] = zscore(adata.obsm["X_cc"][:, 1])
+    if is_4d:
+        adata.obs["G2/M- comp"] = zscore(adata.obsm["X_cc"][:, 2])
+    adata.obs["Histones comp"] = zscore(adata.obsm["X_cc"][:, 3 if is_4d else 2])

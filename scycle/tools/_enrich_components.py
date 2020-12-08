@@ -8,7 +8,7 @@ from ..data import (
 )
 
 
-def enrich_components(adata, verbose=True):
+def enrich_components(adata, thr=3, verbose=True):
     """Pathway enrichment for components from the dimensionality reduction
 
     Parameters
@@ -16,6 +16,8 @@ def enrich_components(adata, verbose=True):
     adata: AnnData
         AnnData object for the analysis. Must be previously evaluated by
         tl.dimensionality_reduction.
+    thr: float
+      Score threshold for IC recognition
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -46,30 +48,68 @@ def enrich_components(adata, verbose=True):
     histone_scores[g2mi_idx] = 0
 
     histone_idx = np.argmax(histone_scores)
-    
-    #-- Print if verbose
+
+    g1s_score = g1s_scores[g1s_idx]
+    g2m_score = g2m_scores[g2m_idx]
+    g2mi_score = g2mi_scores[g2mi_idx]
+    histone_score = histone_scores[histone_idx]
+
+    if g1s_score < thr or g2m_score < thr or histone_score < thr:
+        print("ERROR: low cell-cycle related signatures. Try decreasing the threshold.")
+        return
+
+    g2mi_found = g2mi_score < thr
+    if not g2mi_found:
+        print(
+            "Warning: only three cell-cycle signatures found (out of 4), G2/M inhibition missing."
+        )
+
+    # -- Print if verbose
     if verbose:
-        print('--- Selected components:',
-              'G1/S: ' + str(g1s_idx),
-              'G2/M: ' + str(g2m_idx),
-              'G2/M-: ' + str(g2mi_idx),
-              'Histones: ' + str(histone_idx), sep = '\n')
-    
-    #-- Update dimRed, dimRed3d
-    xdr = adata.obsm['X_dimRed']
-    xdr = xdr[:,[g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
-    xdr3d = PCA(n_components = 3).fit_transform(xdr)
-    
-    adata.obsm['X_4ICs'] = xdr
-    adata.obsm['X_dimRed3d'] = xdr3d
-    
-    # -- Return
-    adata.uns["scycle"]["enrich_components"] = {
-        "G1/S": g1s_idx,
-        "G2/M+": g2m_idx,
-        "G2/M-": g2mi_idx,
-        "Histone": histone_idx,
-    }
+        if g2mi_found:
+            print(
+                "--- Selected components:",
+                "G1/S: %i (score=%f)" % (g1s_idx, g1s_score),
+                "G2/M: %i (score=%f)" % (g2m_idx, g2m_score),
+                "G2/M-: %i (score=%f)" % (g2mi_idx, g2mi_score),
+                "Histones: %i (score=%f)" % (histone_idx, histone_score),
+                sep="\n",
+            )
+        else:
+            print(
+                "--- Selected components:",
+                "G1/S: %i (score=%f)" % (g1s_idx, g1s_score),
+                "G2/M: %i (score=%f)" % (g2m_idx, g2m_score),
+                "Histones: %i (score=%f)" % (histone_idx, histone_score),
+                sep="\n",
+            )
+
+    # -- Update dimRed, pc3
+    if g2mi_found:
+        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
+        xdr3d = PCA(n_components=3).fit_transform(xdr)
+
+        adata.obsm["X_cc"] = xdr
+        adata.obsm["X_pc3"] = xdr3d
+
+        # -- Return
+        adata.uns["scycle"]["enrich_components"] = {
+            "G1/S": g1s_idx,
+            "G2/M+": g2m_idx,
+            "G2/M-": g2mi_idx,
+            "Histone": histone_idx,
+        }
+    else:
+        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, histone_idx]]
+
+        adata.obsm["X_cc"] = xdr
+        adata.obsm["X_pc3"] = xdr.copy()
+
+        adata.uns["scycle"]["enrich_components"] = {
+            "G1/S": g1s_idx,
+            "G2/M+": g2m_idx,
+            "Histone": histone_idx,
+        }
 
 
 def _compute_scores(adata, marker_genes):

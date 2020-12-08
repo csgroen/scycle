@@ -51,9 +51,9 @@ def scatter_projection3d(adata,
         pio.renderers.default = 'browser'
     """
     #-- Get cell projection coordinates
-    x = adata.obsm['X_dimRed3d'][:,0]
-    y = adata.obsm['X_dimRed3d'][:,1]
-    z = adata.obsm['X_dimRed3d'][:,2]
+    x = adata.obsm['X_pc3'][:,0]
+    y = adata.obsm['X_pc3'][:,1]
+    z = adata.obsm['X_pc3'][:,2]
     col = adata.obs[col_var].values
     
     plotdf = pd.DataFrame(dict(x = x, y = y, z = z, col = col))

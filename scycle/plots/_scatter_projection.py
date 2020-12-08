@@ -46,7 +46,7 @@ def scatter_projection(adata, col_var = 'total_counts',
     A plotnine scatter plot of the 2-D projection of all cells.
     """
     # Get coordinates
-    X_dimRed = adata.obsm['X_dimRed3d'][:,0:2]
+    X_dimRed = adata.obsm['X_pc3'][:,0:2]
         
     # Set axes names    
     dimRed_method = adata.uns['scycle']['dimRed']['method']

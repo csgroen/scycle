@@ -29,7 +29,7 @@ def pseudotime(adata: AnnData, scale: bool=True, remap_border = False, border_th
     """                
     #-- Get input data
     pr_gr = adata.uns['princirc_gr']
-    X_emb = adata.obsm['X_4ICs'] if 'X_4ICs' in adata.obsm.keys() else adata.obsm['X_dimRed']
+    X_emb = adata.obsm['X_cc'] if 'X_cc' in adata.obsm.keys() else adata.obsm['X_dimRed']
     X_emb = np.array(X_emb)
     n_dims = X_emb.shape[1]
     node_p = np.array(pr_gr['node_coords'].iloc[:,0:n_dims])
