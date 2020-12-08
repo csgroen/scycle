@@ -43,6 +43,10 @@ def cell_cycle_phase(adata,
     peak_times = peaks/nnodes
     
     #-- Use peaks to find phase divisions
+    if len(peaks) == 3:
+        s_start = peak_times[0]
+        g2_start = peak_times[1]
+        m_start = peak_times[2]
     if len(peaks) == 4:
         s_start = peak_times[1]
         g2_start = peak_times[2]
