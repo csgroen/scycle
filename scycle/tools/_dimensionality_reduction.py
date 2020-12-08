@@ -142,17 +142,11 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
     X = adata.X.copy()
     X -= np.mean(X, axis=0)
     sICA = StabilizedICA(n_components=n_comps, max_iter=2000, n_jobs=-1)
-    for i in range(max_trials):
-        try:
-            sICA.fit(X.T, n_runs=100, plot=False, normalize=True, fun="logcosh")
-        except ValueError:
-            if verbose:
-                print("*- ICA did not converge. Retrying...")
-            continue
-        break
+    sICA.fit(X.T, n_runs=100, plot=False, normalize=True, fun="logcosh")
     if verbose:
         print("-- Done")
-    return {"obj": sICA, "dimred": X @ sICA.S_.T, "pMatrix": sICA.S_}
+    S_pi = np.linalg.pinv(sICA.S_)
+    return {"obj": sICA, "dimred": X @ S_pi, "pMatrix": S_pi.T}
 
 
 # def _dimRed_nmf(adata, n_comps, max_iter, seed, verbose = False):
