@@ -49,6 +49,7 @@ def normalize_by_partition(
         )
         prep_pooling(adata_ref, verbose=verbose)
         dimensionality_reduction(adata_ref, method="ica", verbose=verbose)
+        enrich_components(adata_ref, verbose=verbose)
 
     pc_ran = "principal_circle" not in adata_ref.uns["scycle"].keys()
 

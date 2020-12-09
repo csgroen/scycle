@@ -21,9 +21,16 @@ def subtract_cc(adata):
     inds = [[] for _ in range(1 + np.max(partition))]
     for i in range(adata.n_obs):
         inds[partition[i]].append(i)
+    if any(len(ind) == 0 for ind in inds):
+        print("Warning: empty partitions.")
 
     # Computing barycenter of each cluster
-    means = np.array([np.mean(X[ind, :], axis=0) for ind in inds])
+    means = np.array(
+        [
+            (np.mean(X[ind, :], axis=0) if len(ind) > 0 else np.zeros((X.shape[1],)))
+            for ind in inds
+        ]
+    )
 
     # Computing residues, subtracting cell cycle influence
     residue_matrix = means[partition, :]
