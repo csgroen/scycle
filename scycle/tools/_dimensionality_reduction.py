@@ -100,7 +100,7 @@ def dimensionality_reduction(
     pca_dimRed = PCA(n_components=3)
     pca_dimRed.fit(X_dimRed)
 
-    adata.obsm["X_pc3"] = pca_dimRed.transform(X_dimRed)
+    adata.obsm["X_pca_scycle"] = pca_dimRed.transform(X_dimRed)
 
     adata.uns["scycle"]["dimRed"] = {
         "method": method,

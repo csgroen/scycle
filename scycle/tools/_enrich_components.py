@@ -90,7 +90,7 @@ def enrich_components(adata, thr=3, verbose=True):
         xdr3d = PCA(n_components=3).fit_transform(xdr)
 
         adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pc3"] = xdr3d
+        adata.obsm["X_pca_scycle"] = xdr3d
 
         # -- Return
         adata.uns["scycle"]["enrich_components"] = {
@@ -103,7 +103,7 @@ def enrich_components(adata, thr=3, verbose=True):
         xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, histone_idx]]
 
         adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pc3"] = xdr.copy()
+        adata.obsm["X_pca_scycle"] = xdr.copy()
 
         adata.uns["scycle"]["enrich_components"] = {
             "G1/S": g1s_idx,

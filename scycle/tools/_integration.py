@@ -103,12 +103,12 @@ def integration(
     if verbose:
         print("-- Done")
 
-    # -- Improve X_pc3 so that all datasets are expressed in the same {PC} subspace
+    # -- Improve X_pca_scycle so that all datasets are expressed in the same {PC} subspace
     if Xt.shape[1] >= 4:
         pca = PCA(n_components=3, svd_solver="arpack")
-        _adata_src.obsm["X_pc3"] = pca.fit_transform(_adata_src.obsm["X_cc"])
+        _adata_src.obsm["X_pca_scycle"] = pca.fit_transform(_adata_src.obsm["X_cc"])
     else:
-        _adata_src.obsm["X_pc3"] = _adata_src.obsm["X_cc"]
+        _adata_src.obsm["X_pca_scycle"] = _adata_src.obsm["X_cc"]
 
     # -- Add integration arguments
     ref_dimred = _adata_ref.uns["scycle"]["dimRed"]
