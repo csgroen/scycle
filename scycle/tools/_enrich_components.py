@@ -84,15 +84,7 @@ def enrich_components(adata, thr=3, verbose=True):
                 sep="\n",
             )
 
-    # -- Update dimRed, pc3
     if g2mi_found:
-        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
-        xdr3d = PCA(n_components=3).fit_transform(xdr)
-
-        adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pca_scycle"] = xdr3d
-
-        # -- Return
         adata.uns["scycle"]["enrich_components"] = {
             "G1/S": g1s_idx,
             "G2/M+": g2m_idx,
@@ -100,16 +92,17 @@ def enrich_components(adata, thr=3, verbose=True):
             "Histone": histone_idx,
         }
     else:
-        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, histone_idx]]
-
-        adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pca_scycle"] = xdr.copy()
-
         adata.uns["scycle"]["enrich_components"] = {
             "G1/S": g1s_idx,
             "G2/M+": g2m_idx,
             "Histone": histone_idx,
         }
+
+    # -- Update X_cc, X_pca_scycle
+    xdr = adata.obsm["X_dimRed"]
+    xdr3d = PCA(n_components=3).fit_transform(xdr)
+    adata.obsm["X_cc"] = xdr[:, list(adata.uns["scycle"]["enrich_components"].values())]
+    adata.obsm["X_pca_scycle"] = xdr3d
 
 
 def _compute_scores(adata, marker_genes):

@@ -7,7 +7,7 @@ from anndata import AnnData
 from sklearn.decomposition import PCA
 
 
-def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = True):
+def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
     cell-cycle pseudotime
 
@@ -26,9 +26,7 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = True):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    X_emb = (
-        adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
-    )
+    X_emb = adata.obsm["X_dimRed"]
     n_dims = X_emb.shape[1]
 
     egr = elpigraph.computeElasticPrincipalCircle(
