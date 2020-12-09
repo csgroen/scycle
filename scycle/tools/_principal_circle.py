@@ -26,7 +26,7 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    X_emb = adata.obsm["X_dimRed"]
+    X_emb = adata.obsm["X_cc"]
     n_dims = X_emb.shape[1]
 
     egr = elpigraph.computeElasticPrincipalCircle(
