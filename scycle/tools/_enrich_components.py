@@ -54,14 +54,21 @@ def enrich_components(adata, thr=3, verbose=True):
     g2mi_score = g2mi_scores[g2mi_idx]
     histone_score = histone_scores[histone_idx]
 
+    if verbose:
+        print("G1/S  score: %f" % g1s_score)
+        print("G2/M+ score: %f" % g2m_score)
+        print("G2/M- score: %f" % g2mi_score)
+        print("HIST  score: %f" % histone_score)
+
     if g1s_score < thr or g2m_score < thr or histone_score < thr:
         print("ERROR: low cell-cycle related signatures. Try decreasing the threshold.")
         return
 
-    g2mi_found = g2mi_score < thr
+    g2mi_found = g2mi_score >= thr
     if not g2mi_found:
         print(
-            "Warning: only three cell-cycle signatures found (out of 4), G2/M inhibition missing."
+            "Warning: only three cell-cycle signatures found (out of 4), G2/M inhibition missing (score=%f < %f)."
+            % (g2mi_score, thr)
         )
 
     # -- Print if verbose
@@ -86,33 +93,26 @@ def enrich_components(adata, thr=3, verbose=True):
 
     # -- Update dimRed, pc3
     if g2mi_found:
-        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, g2mi_idx, histone_idx]]
-        xdr3d = PCA(n_components=3).fit_transform(xdr)
-
-        adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pca_scycle"] = xdr3d
-
-        # -- Return
-        adata.uns["scycle"]["enrich_components"] = {
-            "G1/S": g1s_idx,
-            "G2/M+": g2m_idx,
-            "G2/M-": g2mi_idx,
-            "Histone": histone_idx,
-        }
+        indices = [g1s_idx, g2m_idx, g2mi_idx, histone_idx]
     else:
-        xdr = adata.obsm["X_dimRed"][:, [g1s_idx, g2m_idx, histone_idx]]
+        indices = [g1s_idx, g2m_idx, histone_idx]
 
-        adata.obsm["X_cc"] = xdr
-        adata.obsm["X_pca_scycle"] = xdr.copy()
+    xdr = adata.obsm["X_dimRed"][:, indices]
+    xdr3d = PCA(n_components=3).fit_transform(xdr)
 
-        adata.uns["scycle"]["enrich_components"] = {
-            "G1/S": g1s_idx,
-            "G2/M+": g2m_idx,
-            "Histone": histone_idx,
-        }
+    adata.obsm["X_cc"] = xdr
+    adata.obsm["X_pca_scycle"] = xdr3d
+
+    adata.uns["scycle"]["enrich_components"] = {}
+
+    adata.uns["scycle"]["enrich_components"]["G1/S"] = g1s_idx
+    adata.uns["scycle"]["enrich_components"]["G2/M+"] = g2m_idx
+    if g2mi_found:
+        adata.uns["scycle"]["enrich_components"]["G2/M-"] = g2mi_idx
+    adata.uns["scycle"]["enrich_components"]["Histone"] = histone_idx
 
 
 def _compute_scores(adata, marker_genes):
-    marker_genes = [g for g in marker_genes if g in adata.var_names]
-    sel = [(g in marker_genes) for g in adata.var_names]
-    return np.mean(adata.uns["dimRed"].S_[:, sel], axis=1)
+    marker_genes = adata.var_names.intersection(marker_genes)
+    positions = [adata.var_names.get_loc(g) for g in marker_genes]
+    return adata.uns["dimRed"].S_[:, positions].mean(axis=1)

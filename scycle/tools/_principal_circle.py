@@ -5,9 +5,10 @@ import pandas as pd
 import elpigraph
 from anndata import AnnData
 from sklearn.decomposition import PCA
+from ._enrich_components import enrich_components
 
 
-def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = True):
+def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
     cell-cycle pseudotime
 
@@ -26,6 +27,12 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = True):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
+    if "X_cc" not in adata.obsm:
+        print(
+            "Warning, components must be enriched before principal circle computation."
+        )
+        print("Computing component enrichment with default values...")
+        enrich_components(adata, verbose=verbose)
     X_emb = (
         adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
     )
