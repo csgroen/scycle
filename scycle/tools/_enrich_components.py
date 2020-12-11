@@ -110,12 +110,6 @@ def enrich_components(adata, thr=3, verbose=True):
         adata.uns["scycle"]["enrich_components"]["G2/M-"] = g2mi_idx
     adata.uns["scycle"]["enrich_components"]["Histone"] = histone_idx
 
-    # -- Update X_cc, X_pca_scycle
-    xdr = adata.obsm["X_dimRed"]
-    xdr3d = PCA(n_components=3).fit_transform(xdr)
-    adata.obsm["X_cc"] = xdr[:, list(adata.uns["scycle"]["enrich_components"].values())]
-    adata.obsm["X_pca_scycle"] = xdr3d
-
 
 def _compute_scores(adata, marker_genes):
     marker_genes = adata.var_names.intersection(marker_genes)

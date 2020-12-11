@@ -135,7 +135,7 @@ def _dimRed_pca(adata, n_comps, verbose=False):
     return {"obj": pca, "dimred": X_dimRed, "pMatrix": pca.components_}
 
 
-def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
+def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
     # -- Run ICA
     if verbose:
         print("-- Dimensionality reduction using ICA...")
