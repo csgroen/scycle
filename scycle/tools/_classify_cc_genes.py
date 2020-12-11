@@ -22,7 +22,7 @@ def classify_genes_by_ic(adata, min_r2=0.5, verbose=False):
     # Computing most important IC for each gene
     components = list(adata.uns["scycle"]["enrich_components"].values())
     is_4d = len(components) == 4
-    maxes = np.argmax(adata.uns["P_dimRed"][components, :], axis=0)
+    maxes = np.argmax(adata.varm["P_dimRed"][components, :], axis=0)
 
     # Correcting for histone genes
     var_startswith = adata.var_names.str.startswith

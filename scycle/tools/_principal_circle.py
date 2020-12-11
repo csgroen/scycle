@@ -5,6 +5,7 @@ import pandas as pd
 import elpigraph
 from anndata import AnnData
 from sklearn.decomposition import PCA
+from ._enrich_components import enrich_components
 
 
 def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
@@ -26,7 +27,16 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    X_emb = adata.obsm["X_cc"]
+    if "X_cc" not in adata.obsm:
+        print(
+            "Warning, components must be enriched before principal circle computation."
+        )
+        print("Computing component enrichment with default values...")
+        enrich_components(adata, verbose=verbose)
+    X_emb = (
+        adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
+    )
+
     n_dims = X_emb.shape[1]
 
     egr = elpigraph.computeElasticPrincipalCircle(

@@ -94,7 +94,7 @@ def dimensionality_reduction(
     X_dimRed = dimred_res["dimred"]
     adata.obsm["X_dimRed"] = X_dimRed
     adata.uns["dimRed"] = dimred_res["obj"]
-    adata.uns["P_dimRed"] = dimred_res["pMatrix"]
+    adata.varm["P_dimRed"] = dimred_res["pMatrix"]
 
     # -- 3D
     pca_dimRed = PCA(n_components=3)
@@ -146,7 +146,7 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False, max_trials=10):
     if verbose:
         print("-- Done")
     S_pi = np.linalg.pinv(sICA.S_)
-    return {"obj": sICA, "dimred": X @ S_pi, "pMatrix": S_pi.T}
+    return {"obj": sICA, "dimred": X @ S_pi, "pMatrix": S_pi}
 
 
 # def _dimRed_nmf(adata, n_comps, max_iter, seed, verbose = False):
