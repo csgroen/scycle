@@ -17,7 +17,7 @@ from ..tools import (
 
 
 def normalize_by_partition(
-    adata_src, adata_ref=None, rerun_pc=True, n_ref_parts=10, verbose=True
+    adata_src, adata_ref=None, rerun_pc=False, n_ref_parts=10, verbose=False
 ):
 
     """Normalize samples by median partition library size
