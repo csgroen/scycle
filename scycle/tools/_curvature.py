@@ -17,12 +17,11 @@ def curvature(adata, smoothing_factor=10, s=0, k=3):
         Degree of the spline, increasing it improves accuracy but
         can cause overfitting.
     """
-    if "egr" not in adata.uns:
-        print("Error: Principal circle must be computed before computing curvature.")
-        return
 
-    node_pos: np.ndarray = adata.uns["egr"]["NodePositions"]
-    n_nodes: int = node_pos.shape[0]
+    node_coords = adata.uns["princirc_gr"]["node_coords"]
+    idx = [c for c in node_coords.columns if "dim" in c]
+    node_pos = np.array(node_coords[idx])
+    n_nodes = node_pos.shape[0]
     d_nodes: int = node_pos.shape[1]
     x: np.ndarray = np.linspace(0, n_nodes - 1, n_nodes)
 
