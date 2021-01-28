@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import woti
 
 from anndata import AnnData
-from ot import dist, sinkhorn
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
@@ -15,9 +15,13 @@ def integration(
     _adata_src: AnnData,
     _adata_ref: AnnData,
     components: list = [],
-    metric: str = "sqeuclidean",
-    eps=1e-3,
+    algorithm: str = "woti",
     verbose: bool = False,
+    max_iter: int = 1e7,
+    scale_src: float = 0.1,
+    scale_ref: float = 0.1,
+    alpha_kde: float = 0.5,
+    alpha_qp: float = 1.0,
 ):
     """
     Optimal transport-based data integration. Data dimensionality must have been reduced
@@ -33,14 +37,29 @@ def integration(
     components: list
         ICs indices caring cell-cycle related information. Let
         it empty for automatic detection.
-    metric: str, optional
-        Metric to use for computing the cost matrix, passed as
-        an argument to scipy.spatial.distance.cdist. Default is
-        euclidean distance.
-    eps: float, optional
-        Error threshold for the sinkhorn algorithm. Tune it if
-        encountering overflow/convergence issues.
+    algorithm: str
+        Integration algorithm to use, in "oti" (optimal transport
+        integration) of "woti" (weighted optimal transport integration).
+    verbose: bool
+        Outputs information in standard output stream.
+    max_iter: int
+        Maximum number of iterations for the optimal transport plan computation.
+    scale_src: float
+        For WOTi only.
+        Kernel scaling of the source cloud point.
+    scale_ref: float
+        For WOTi only.
+        Kernel scaling of the reference cloud point.
+    alpha_kde: float
+        For WOTi only.
+        Alpha parameter for KDE bandwith selection, between 0 and 1.
+    alpha_qp:
+        For WOTi only.
+        Alpha parameter for quadratic program solver (OSQP), between 0 and 2
     """
+    assert algorithm in ("oti", "woti",), (
+        "Algorithm %s not recognized. Options: 'oti', 'woti'" % algorithm
+    )
     assert (
         "dimRed" in _adata_ref.uns
     ), "ICA projection matrix missing in source AnnData. \
@@ -82,11 +101,11 @@ def integration(
             print("> Projecting reference dataset...")
         Y_c = adata_ref.X.copy()
         Y_c -= np.mean(Y_c, axis=0)
-        adata_ref.obsm["X_dimRed"] = Y_c @ (adata_ref.varm["P_dimRed"].T)[genes_idx, :]
+        adata_ref.obsm["X_dimRed"] = Y_c @ adata_ref.varm["P_dimRed"]
 
     X_c = adata_src.X.copy()
     X_c -= np.mean(X_c, axis=0)
-    adata_src.obsm["X_dimRed"] = X_c @ (adata_ref.varm["P_dimRed"].T)[genes_idx, :]
+    adata_src.obsm["X_dimRed"] = X_c @ adata_ref.varm["P_dimRed"]
 
     Xs: np.ndarray = adata_src.obsm["X_dimRed"]
     Xt: np.ndarray = adata_ref.obsm["X_cc"]
@@ -94,16 +113,29 @@ def integration(
     Xs = Xs[:, components]
 
     # -- Update objects
-    _adata_src.obsm["X_cc"] = _raw_ot_integration(
-        Xs, Xt, metric=metric, eps=eps, verbose=verbose
-    )
+    if verbose:
+        print("> Performing optimal transport based integration using WOTi...")
+    if algorithm == "oti":
+        _adata_src.obsm["X_cc"] = woti.bot_transform(Xs, Xt, verbose=verbose)
+    elif algorithm == "woti":
+        _adata_src.obsm["X_cc"] = woti.wot_transform(
+            Xs,
+            Xt,
+            max_iter=max_iter,
+            scale=scale_src,
+            scale_ref=scale_ref,
+            alpha_kde=alpha_kde,
+            alpha_qp=alpha_qp,
+            verbose=verbose,
+        )
+
     _adata_ref.obsm["X_cc"] = Xt
     _adata_src.obsm["X_dimRed"] = adata_src.obsm["X_dimRed"]
 
     if verbose:
         print("-- Done")
 
-    # -- Improve X_pca_scycle so that all datasets are expressed in the same {PC} subspace
+    # -- Update X_pca_scycle so that all datasets are expressed in the same {PC} subspace
     if Xt.shape[1] >= 4:
         pca = PCA(n_components=3, svd_solver="arpack")
         _adata_src.obsm["X_pca_scycle"] = pca.fit_transform(_adata_src.obsm["X_cc"])
@@ -116,37 +148,3 @@ def integration(
 
     _adata_src.uns["scycle"]["dimRed"] = ref_dimred
     _adata_src.varm["P_dimRed"] = _adata_ref.varm["P_dimRed"]
-
-    _adata_src.uns["scycle"]["integration"] = dict(
-        components=components, metric=metric, eps=eps
-    )
-
-
-def _raw_ot_integration(
-    Xs: np.ndarray, Xt: np.ndarray, metric: str = "sqeuclidean", eps=1e-3, verbose=False
-):
-    """
-    Unregularized optimal transport-based cell cycle integration. Maps
-    Xs (source) points onto Xt (target).
-    """
-    n, d1 = Xs.shape
-    m, d2 = Xt.shape
-
-    assert (
-        d1 == d2
-    ), "Dimensions do not coincide %i (source) vs %i (target). Terminating..." % (
-        d1,
-        d2,
-    )
-
-    w_x, w_y = np.ones((n,)) / n, np.ones((m,)) / m
-    if verbose:
-        print("> Computing distance matrix...")
-    M = dist(Xs, Xt, metric=metric)
-    M /= M.max()
-    if verbose:
-        print("> Computing optimal transport plan...")
-    Gs = sinkhorn(w_x, w_y, M, eps)
-    if verbose:
-        print("> Projecting source dataset...")
-    return np.diag(1 / w_x) @ Gs @ Xt

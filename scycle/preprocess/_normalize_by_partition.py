@@ -17,7 +17,7 @@ from ..tools import (
 
 
 def normalize_by_partition(
-    adata_src, adata_ref=None, rerun_pc=False, n_ref_parts=10, verbose=False
+    adata_src, adata_ref, rerun_pc=False, n_ref_parts=10, verbose=False
 ):
 
     """Normalize samples by median partition library size
@@ -29,8 +29,7 @@ def normalize_by_partition(
     adata_src: AnnData
         Unprocessed AnnData
     adata_ref: AnnData
-        Reference AnnData object, that has been processed. If None, src will be
-        automatically copied and preprocessed.
+        Reference AnnData object, that has been processed.
     rerun_pc: bool
         If True, `tl.principal circle` is re-run with n_ref_parts as n_nodes.
         Using fewer partitions for re-normalization than the default number used
@@ -40,20 +39,12 @@ def normalize_by_partition(
         If True, the function will print messages.
 
     """
-    if adata_ref is None:
-        adata_ref = adata_src.copy()
+    assert adata_ref is not None, "Reference adata needed. Terminating..."
+    assert (
+        "scycle" in adata_ref.uns
+    ), "Reference adata should be preprocessed using scycle.Terminating..."
 
-    if "scycle" not in adata_ref.uns:
-        print(
-            "Reference adata should be preprocessed... Doing it with default values..."
-        )
-        prep_pooling(adata_ref, verbose=verbose)
-        dimensionality_reduction(adata_ref, method="ica", verbose=verbose)
-        enrich_components(adata_ref, verbose=verbose)
-
-    pc_ran = "principal_circle" not in adata_ref.uns["scycle"].keys()
-
-    if pc_ran | rerun_pc:
+    if rerun_pc or "principal_circle" not in adata_ref.uns["scycle"].keys():
         if verbose:
             print("-- Running `tl.principal_circle` with n_ref_parts...")
         principal_circle(adata_ref, n_nodes=n_ref_parts, verbose=False)
@@ -77,16 +68,17 @@ def normalize_by_partition(
     if verbose:
         print("Normalizing by partition...")
 
-    # ---- Get partitions and re-noralize
+    # ---- Get partitions and re-normalize
 
     prt = adata_ref.obs["partition"]
     gexp = adata_src.X
 
-    npart = np.max(prt) + 1
+    npart = int(np.max(prt) + 1)
     new_gexp = np.empty(gexp.shape)
+
     # computing median per partition
     median_per_partition = np.array([0] * npart)
-    for p in range(int(npart)):
+    for p in range(npart):
         sidx = prt == p  # sample index
         totals = np.sum(gexp[sidx, :], axis=1)  # total counts per sample in group
         median_per_partition[p] = np.median(

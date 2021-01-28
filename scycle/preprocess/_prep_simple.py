@@ -64,8 +64,6 @@ def prep_simple(
     if log_transform:
         sc.pp.log1p(adata, base=10)
 
-
-
     if not for_pooling:
         adata.uns["scycle"] = {
             "preprocess": {

@@ -66,8 +66,6 @@ def dimensionality_reduction(
 
     if method == "pca":
         dimred_res = _dimRed_pca(adata, n_comps=n_comps, verbose=verbose)
-        # elif method == "pcaCCgenes":
-        #    dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
     elif method == "ica":
         dimred_res = _dimRed_ica(
             adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
@@ -78,11 +76,6 @@ def dimensionality_reduction(
         dimred_res = _dimRed_ica(
             adata_cc, max_iter=max_iter, seed=seed, n_comps=n_comps, verbose=verbose
         )
-
-        # elif method == 'nmf': dimred_res = _dimRed_nmf(adata, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
-        # elif method == 'nmfCCgenes': dimred_res = _dimRed_nmf(adata_cc, n_comps = n_comps, max_iter = max_iter, seed = seed, verbose = verbose)
-        # elif method == "CCgenes":
-        #    dimred_res = _dimRed_CCgenes(adata, verbose=verbose)
     else:
         raise Exception(
             (
@@ -147,35 +140,6 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
         print("-- Done")
     S_pi = np.linalg.pinv(sICA.S_)
     return {"obj": sICA, "dimred": X @ S_pi, "pMatrix": S_pi}
-
-
-# def _dimRed_nmf(adata, n_comps, max_iter, seed, verbose = False):
-#     if verbose: print('-- Dimensionality reduction using NMF...')
-#     nmf = NMF(n_components = n_comps, max_iter = max_iter, random_state=seed)
-#     nmf.fit(adata.X)
-#     X_dimRed = nmf.transform(adata.X)
-#     return {'obj': nmf, 'dimred': X_dimRed}
-
-
-# def _dimRed_CCgenes(adata, verbose=False):
-#     if verbose:
-#         print("-- Dimensionality reduction using G1 and G2/M signatures...")
-#     X_dimRed = adata.obs.loc[:, ["G1", "G2-M"]]
-#     return {"obj": "CC_genes", "dimred": X_dimRed}
-
-
-# def _dimRed_CCA(adata, n_comps, cl_var, verbose = False):
-#     if cl_var == None:
-#         raise(Exception("cl_var can't be None if using Canonical Correlation Analysis"))
-#     if verbose: print('-- Dimensionality reduction using CCA...')
-#     #-- Make adata_list
-#     cl = adata.obs[cl_var].values
-#     idxs = [cl == cat for cat in cl.categories]
-#     adata_list = [adata.X[idx,:] for idx in idxs]
-#     n = np.min([mat.shape[0] for mat in adata_list])
-#     adata_list_min = [mat[0:n,:] for mat in adata_list]
-#     cca = rcca.CCA(numCC = n_comps, kernelcca = False)
-#     cca.train(adata_list_min)
 
 
 def _dimRed_decomp(adata, decomp, feats, ccomps):
