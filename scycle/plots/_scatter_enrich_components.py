@@ -31,7 +31,7 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
     proj = adata.obsm['X_dimRed']
     n_ics = proj.shape[1]
     spart = adata.obs['partition'].values
-    comps = adata.uns['scycle']['enrich_components']
+    comps = adata.uns['scycle']['enrich_components']['indices']
     
     #-- Make IC dataframe
     ic_df = pd.DataFrame(proj)
@@ -77,7 +77,7 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
     elif plot_type == 'panel':
         #-- Add variables for mapping plotting
         ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-        ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M+')
+        ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
         ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
         ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
         ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3, ic_trajm4])

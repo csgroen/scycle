@@ -3,7 +3,11 @@
 import scanpy as sc
 from anndata import AnnData
 import numpy as np
-
+from ..data import (
+    g2m_markers,
+    g1s_markers,
+    histone_markers,
+)
 
 def prep_simple(
     adata: AnnData,
@@ -13,6 +17,7 @@ def prep_simple(
     for_pooling: bool = True,
     log_transform: bool = True,
     division_factor: float = 1,
+    score_cell_cycle: bool = True,
     verbose: bool = True,
 ):
     """Pre-processes AnnData without pooling. Should be done only once.
@@ -35,6 +40,8 @@ def prep_simple(
         Set it to false if you do not want values to be log-transformed.
     division_factor: int
         Scaling factor, divides the counts matrix by this value.
+    score_cell_cycle: bool
+        Should cell cycle scores be added?
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -45,10 +52,23 @@ def prep_simple(
 
     assert division_factor != 0, "Null division factor. Terminating..."
     adata.X = adata.X / division_factor
-
+    
+    if 'total_counts' not in adata.obs.keys():
+        adata.obs['total_counts'] = adata.X.sum(1)
+        
     # Normalization step
     if normalize_counts:
         sc.pp.normalize_total(adata, target_sum=np.median(adata.obs["total_counts"]))
+
+    if score_cell_cycle:
+        if verbose: print('Scoring cell cycle...')
+        sc.tl.score_genes(adata, g1s_markers, score_name = 'G1-S')
+        sc.tl.score_genes(adata, g2m_markers, score_name = 'G2-M')
+        sc.tl.score_genes(adata, histone_markers, score_name = 'Histones')
+    
+        # sigs = ['G1-S', 'G2-M', 'Histones']
+        # for sig in sigs: 
+        #     adata.obs[sig] = adata.obs[sig]/np.max(adata.obs[sig])
 
     # Highly variable genes filtering
     if filter_var_genes:
@@ -76,31 +96,3 @@ def prep_simple(
                 "n_top_genes": n_top_genes,
             }
         }
-
-
-def quality_control(adata, min_counts, max_counts, max_mt_ratio, verbose):
-    """
-    min_counts: int
-        Minimum number of counts required for a cell to pass filtering.
-    max_counts: int
-        Maximum number of counts required for a cell to pass filtering.
-    max_mt_ratio: int
-        Maximum proportion of mitochondrial genes in a cell to pass
-        filtering.
-    """
-    adata.var["mt"] = adata.var_names.str.startswith("MT-")
-    sc.pp.calculate_qc_metrics(
-        adata, qc_vars=["mt"], percent_top=None, log1p=False, inplace=True
-    )
-    inds1 = np.where(
-        (adata.obs["total_counts"] > min_counts)
-        & (adata.obs["total_counts"] < max_counts)
-    )
-    inds2 = np.where(adata.obs["pct_counts_mt"] < max_mt_ratio)
-    if verbose:
-        print(len(inds1[0]), "samples pass the count filter")
-        print(len(inds2[0]), " samples pass the mt filter")
-    ind_samples = np.intersect1d(inds1[0], inds2[0])
-    if verbose:
-        print("Samples selected", len(ind_samples))
-    adata._inplace_subset_obs(ind_samples)

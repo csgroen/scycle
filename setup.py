@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='scycle',
-      version='0.1.9',
+      version='0.1.10',
       description='Cell cycle pseudotime in single-cell RNA-seq',
       url='http://github.com/csgroen/scycle',
       author=['Clarice Groeneveld', 'Andrei Zinovyev', 'Aziz Fouché'],
@@ -16,7 +16,8 @@ setup(name='scycle',
           'plotnine',
           'plotly',
           'typing',
-          'POT'
+          'POT',
+          'scrublet',
       ],
       include_package_data = True,
       package_data ={'': ['data/*.pkl']},

@@ -50,11 +50,11 @@ def scatter_cell_cycle(
 
     """
     if scores == "signatures":
-        y = ["S-phase", "G2-M", "Histones"]
+        y = ["G1-S", "G2-M", "Histones"]
         colors = ["#66c2a5", "#fc8d62", "#8da0cb", "black"]
     elif scores == "components":
         _add_compScores(adata)
-        y = ["G1/S comp", "G2/M+ comp", "G2/M- comp", "Histones comp"]
+        y = ["G1/S comp", "G2/M comp", "G2/M- comp", "Histone comp"]
         colors = ["#66c2a5", "#fc8d62", "#8da0cb", "#e5c494", "black"]
 
     time_scatter = scatter_pseudotime(adata, y=y, size=size, alpha=alpha) + labs(
@@ -120,9 +120,7 @@ def scatter_cell_cycle(
 
 
 def _add_compScores(adata):
-    is_4d = "G2/M-" in adata.uns["scycle"]["enrich_components"]
-    adata.obs["G1/S comp"] = zscore(adata.obsm["X_cc"][:, 0])
-    adata.obs["G2/M+ comp"] = zscore(adata.obsm["X_cc"][:, 1])
-    if is_4d:
-        adata.obs["G2/M- comp"] = zscore(adata.obsm["X_cc"][:, 2])
-    adata.obs["Histones comp"] = zscore(adata.obsm["X_cc"][:, 3 if is_4d else 2])
+    ecom_idx = adata.uns['scycle']['enrich_components']['indices']
+    for comp, i in ecom_idx.items():
+        cname = comp + ' comp'
+        adata.obs[cname] = zscore(adata.obsm['X_dimRed'][:,i])

@@ -4,34 +4,30 @@ import scanpy as sc
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from anndata import AnnData
-from ._prep_simple import prep_simple, quality_control
+from ._prep_simple import prep_simple
 
 
 def prep_pooling(
     adata: AnnData,
     dim_red_method_pooling: str = "pca",
     n_neighbors: int = 5,
-    embed_n_comps: int = 20,
-    filter_cells: bool = True,
-    min_counts: int = 10000,
-    max_counts: int = 40000,
-    max_mt_ratio: int = 20,
+    embed_n_comps: int = 20,  
     normalize_counts: bool = True,
     filter_var_genes: bool = True,
     n_top_genes: int = 10000,
-    for_pooling: bool = True,
     log_transform: bool = True,
     division_factor: float = 1,
+    score_cell_cycle: bool = True,
     verbose: bool = True,
 ):
-    """Pre-processes AnnData without pooling
+    """Pre-processes AnnData with cell pooling
 
     Parameters
     ----------
     adata: AnnData
         The AnnData object to be pre-processed. This should already have been
         processed to remove "bad cells" (high mitochondrial percentage,
-        aberrant total counts).
+        aberrant total counts). See pp.filter_cells
     dim_red_method_pooling: str
         Method to use for dimensionality reduction to do the pooling procedure.
         Default: 'pca'. TO-DO: support 'ica' and other?
@@ -39,15 +35,6 @@ def prep_pooling(
         Number of nearest neighbors to use for pooling.
     embed_n_comps: int
         Number of components to use for the embedding to do the pooling.
-    filter_cells: bool
-        Set it to False if bad quality cells were already filtered
-    min_counts: int
-        Minimum number of counts required for a cell to pass filtering.
-    max_counts: int
-        Maximum number of counts required for a cell to pass filtering.
-    max_mt_ratio: int
-        Maximum proportion of mitochondrial genes in a cell to pass
-        filtering.
     normalize_counts: bool
         Set it to False if library does not need normalization
     filter_var_genes: bool
@@ -55,13 +42,12 @@ def prep_pooling(
     n_top_genes: int
         Number of genes to keep after highly variable filter. Used if
         `filter_var_genes` is True. Passed to sc.pp.highly_variable_genes.
-    for_pooling: bool
-        Set to True if the function is called by the `prep_pooling` function.
-        Changes the return object parameters.
     log_transform: bool
         Set it to false if you do not want values to be log-transformed.
     division_factor: int
         Scaling factor, divides the counts matrix by this value.
+    score_cell_cycle: bool
+        Should cell cycle scores be added?
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -69,9 +55,9 @@ def prep_pooling(
     ----------
     None
     """
-
-    if "scycle" in adata.uns:
-        raise Exception("Data has already been pre-processed")
+    if 'scycle' in adata.uns:
+        if 'preprocess' in adata.uns['scycle'].keys():
+            raise Exception("Data has already been pre-processed")
 
     if verbose:
         print("Preparing embedding...")
@@ -79,8 +65,8 @@ def prep_pooling(
     assert division_factor != 0, "Null division factor. Terminating..."
     adata.X = adata.X / division_factor
 
-    if filter_cells:
-        quality_control(adata, min_counts, max_counts, max_mt_ratio, verbose)
+    if len(adata.layers.keys()) == 0: # keep "raw" data
+        adata.layers['matrix'] = adata.X
 
     adata_simple = adata.copy()
     prep_simple(
@@ -91,6 +77,7 @@ def prep_pooling(
         True,
         log_transform,
         1,
+        score_cell_cycle,
         False,
     )
 
@@ -101,8 +88,9 @@ def prep_pooling(
     )
 
     if verbose:
-        print("Pooling", str(X_embed.shape[0]), "samples...")
+        print("Pooling", str(X_embed.shape[0]), "cells...")
     _smooth_adata_by_pooling(adata, X_embed, n_neighbours=n_neighbors)
+    
     prep_simple(
         adata,
         normalize_counts,
@@ -113,23 +101,20 @@ def prep_pooling(
         1,
         verbose,
     )
-
-    adata.uns["scycle"] = {
-        "preprocess": {
+    
+    if 'scycle' not in adata.uns.keys():
+        adata.uns['scycle'] = {}
+        
+    adata.uns["scycle"]['preprocess'] = {
             "method": "pooling",
             "n_neighbors": n_neighbors,
-            "min_counts": min_counts,
-            "max_counts": max_counts,
-            "max_mt_ratio": max_mt_ratio,
             "normalize_counts": normalize_counts,
             "filter_var_genes": filter_var_genes,
             "division_factor": division_factor,
             "log_transform": log_transform,
             "n_top_genes": n_top_genes,
-            "embed_n_comps": embed_n_comps,
-        }
-    }
-
+            "embed_n_comps": embed_n_comps
+            }
 
 def _embed_for_pooling(adata, dim_red, n_comps):
     if dim_red == "pca":
