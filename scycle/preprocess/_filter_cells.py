@@ -36,6 +36,15 @@ def filter_cells(adata: AnnData,
         Uses doublet detection instead of max counts to remove doublets
     scrublet_kwargs: dict
         Arguments passed to Scrublet for doublet detection
+        
+    Results
+    ----------
+    Cells not passing the quality control filters are removed from adata
+
+    Sets
+    ----------
+    uns['scrublet'] if doublet_detection = True
+    'pct_counts_mt', 'total_counts' in obs
     """
     #-- Mitochondrial content
     adata.var["mt"] = adata.var_names.str.startswith("MT-")
@@ -45,12 +54,12 @@ def filter_cells(adata: AnnData,
     
     if doublet_detection:
         scrub = scr.Scrublet(adata.X, 
-                             scrublet_kwargs['total_counts'],
-                             scrublet_kwargs['sim_doublet_ratio'],
-                             scrublet_kwargs['n_neighbors'],
-                             scrublet_kwargs['expected_doublet_rate'],
-                             scrublet_kwargs['stdev_doublet_rate'],
-                             scrublet_kwargs['random_state'])
+                             total_counts = scrublet_kwargs['total_counts'],
+                             sim_doublet_ratio = scrublet_kwargs['sim_doublet_ratio'],
+                             n_neihbors = scrublet_kwargs['n_neighbors'],
+                             expected_doublet_rate = scrublet_kwargs['expected_doublet_rate'],
+                             stdev_doublet_rate = scrublet_kwargs['stdev_doublet_rate'],
+                             random_state = scrublet_kwargs['random_state'])
         adata.obs['doublet_scores'], adata.obs['predicted_doublets'] = scrub.scrub_doublets()        
         inds1 = np.where((~adata.obs['predicted_doublets'].values) & 
                          (adata.obs['total_counts'] < max_counts) &

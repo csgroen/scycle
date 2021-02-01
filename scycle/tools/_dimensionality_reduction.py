@@ -7,14 +7,18 @@ from typing import Optional
 from sklearn.decomposition import PCA
 from sica.base import StabilizedICA
 from anndata import AnnData
-from ..annot import cellcycle_signatures
-
+from ..data import (
+    g2m_markers,
+    g1s_markers,
+    g2m_inhibitory_markers,
+    histone_markers,
+)
 
 def dimensionality_reduction(
     adata: AnnData,
-    method: str = "pcaCCgenes",
+    method: str = "ica",
     n_comps: int = 30,
-    sig_names: list = ["S-phase", "G2-M"],
+    sig_names: list = ["G1/S", "G2/M"],
     seed: Optional[int] = None,
     max_iter: int = 200,
     verbose: bool = True,
@@ -40,7 +44,7 @@ def dimensionality_reduction(
         Sets up the random state for FastICA and NMF for results reproducibility.
         Used for 'nmf', 'ica', 'nmfCCgenes' and 'icaCCgenes' methods.
     max_iter: int
-        Maximum number of iterations during FastICA and NMF fit.
+        Maximum numhistone_markersber of iterations during FastICA and NMF fit.
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -105,11 +109,11 @@ def dimensionality_reduction(
 
 def _adata_CCgenes(adata, sig_names):
     # -- Get CC genes
-    cc_sigs = cellcycle_signatures()
-    cc_sigs = {sign: cc_sigs[sign] for sign in sig_names}
-
+    cc_sigs = {'G1/S': g1s_markers, 'G2/M': g2m_markers, 'Histones': histone_markers,
+               'G2/M-': g2m_inhibitory_markers}
+    
     flat_sigs = [
-        item for sublist in [v for k, v in cc_sigs.items()] for item in sublist
+        item for sublist in [v for k, v in cc_sigs.items() if k in sig_names] for item in sublist
     ]
     cc_genes = np.unique(np.array(flat_sigs))
     # -- Select in matrix
