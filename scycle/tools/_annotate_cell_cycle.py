@@ -35,7 +35,7 @@ def annotate_cell_cycle (adata: AnnData, s_start: Optional[float]=None,
     if s_start == None:
         s_start = adata.uns['scycle']['cell_cycle_division']['s_start']
     else:
-        adata.uns['scycle']['cell_cycle_division']['sphase_start'] = s_start
+        adata.uns['scycle']['cell_cycle_division']['s_start'] = s_start
     if g2_start == None:
         g2_start = adata.uns['scycle']['cell_cycle_division']['g2_start']
     else:

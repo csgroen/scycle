@@ -58,7 +58,7 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
         
     #-- Get remapping positions
     if cdir > 0:
-        start = div_edge[0]
+        start = div_edge[1]
         remap_vec = np.array(range(start, n_nodes+start))
         idx = remap_vec >= n_nodes
         remap_vec[idx] = remap_vec[idx] - n_nodes

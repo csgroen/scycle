@@ -2,12 +2,17 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
-from scipy.interpolate import UnivariateSpline
 from scipy.signal import find_peaks
 from ._curvature import curvature
+from ._annotate_cell_cycle import annotate_cell_cycle
 
 
-def cell_cycle_phase(adata, smoothing_factor=10, verbose=True):
+def cell_cycle_phase(adata, 
+                     smoothing_factor=10, 
+                     transition_refs = [0.35, 0.65, 0.95], 
+                     max_refdist = 0.2, 
+                     annotate = True,
+                     verbose = True):
     """Estimates the phase of cell cycle for each cell based on the curvature
     of the trajectory embedded in the cell cycle space
 
@@ -19,6 +24,13 @@ def cell_cycle_phase(adata, smoothing_factor=10, verbose=True):
     smoothing_factor: int
         A smoothing factor used for calculating the Univariate Spline used to
         estimate the curvature of the trajectory
+    transition_refs: list
+        A list of length 3 with reference time-points for transitions between
+        G1 and S, S and G2 and G2 and M, respectively.
+    max_refdist: float
+        Maximum distance between reference transition time and transition point.
+        If no peak is within max_refdist of a transition reference point, the
+        reference point is used instead.
     verbose: bool
         If True, the function will print messages.
 
@@ -43,25 +55,15 @@ def cell_cycle_phase(adata, smoothing_factor=10, verbose=True):
     peaks = find_peaks(curv)[0]
     peak_times = peaks / nnodes
 
-    # -- Use peaks to find phase divisions
-    if len(peaks) == 3:
-        s_start = peak_times[0]
-        g2_start = peak_times[1]
-        m_start = peak_times[2]
-    if len(peaks) == 4:
-        s_start = peak_times[1]
-        g2_start = peak_times[2]
-        m_start = peak_times[3]
-    elif len(peaks) == 5:
-        s_start = peak_times[1]
-        g2_start = peak_times[3]
-        m_start = peak_times[4]
-    else:
-        pkorder = np.argsort(curv[peaks])
-        max_pktimes = [peak_times[pkorder[-1]], peak_times[pkorder[-2]]]
-        s_start = np.min(max_pktimes)  # one of the maximum peaks, earlier
-        g2_start = np.max(max_pktimes)  # one of the maximum peaks, later
-        m_start = np.max(peak_times)  # last peak
+    # -- Check ref_times
+    if len(transition_refs) != 3:
+        raise Exception("`transition_refs` must be a list of length 3")
+        
+    #-- Get peaks closest to transition_refs
+    sref_time, g2ref_time, mref_time = transition_refs
+    s_start = _transition_time(sref_time, peak_times, max_refdist)
+    g2_start = _transition_time(g2ref_time, peak_times, max_refdist)
+    m_start = _transition_time(mref_time, peak_times, max_refdist)
 
     # -- Save curvature info
     curv_data = pd.DataFrame(dict(x=x, pseudotime=x / nnodes, curvature=curv)).merge(
@@ -83,30 +85,13 @@ def cell_cycle_phase(adata, smoothing_factor=10, verbose=True):
         "m_start": m_start,
         "curvature": curv_data,
     }
+    
+    if annotate:
+        annotate_cell_cycle(adata)
 
 
-def _calc_curvature(nodep, smoothing_factor=10):
-    splines = []
-    derivs = []
-    for i in range(nodep.shape[1]):
-        spline = UnivariateSpline(
-            np.linspace(0, nodep.shape[0] - 1, nodep.shape[0]), nodep[:, i], s=0, k=3
-        )
-        splines.append(spline)
-        derivs.append(spline.derivative(n=2))
-    n_points = nodep.shape[0]
-    curv = np.zeros(nodep.shape[0])
-    x = np.linspace(0, nodep.shape[0] - 1, n_points)
-    temp = np.zeros((n_points, nodep.shape[1]))
-    print(temp.shape)
-    for i in range(len(derivs)):
-        temp[:, i] = derivs[i](x)
-    curv = np.sqrt(np.sum(temp ** 2, axis=1))
-    curv_spl = UnivariateSpline(x, curv, s=np.var(curv) * smoothing_factor, k=3)
-    return x, curv_spl(x)
-
-
-# def _calc_curvature_cyclic(nodep,smoothing_factor=5):
-#     nodep3 = np.concatenate((nodep,nodep,nodep),axis=0)
-#     x,curv = _calc_curvature(nodep3,smoothing_factor=smoothing_factor)
-#     return x[nodep.shape[0]:2*nodep.shape[0]]-nodep.shape[0], curv[nodep.shape[0]:2*nodep.shape[0]]
+def _transition_time(ref_time, peak_times, max_refdist):
+    sdists = np.abs(peak_times - ref_time)
+    idx = np.argmin(sdists)
+    if sdists[idx] < max_refdist: return peak_times[idx]
+    else: return ref_time

@@ -71,7 +71,7 @@ def integration(
             print("-- Automatically detecting cell-cycle components...")
         if "enrich_components" not in _adata_ref.uns["scycle"].keys():
             enrich_components(_adata_ref)
-        components = list(_adata_ref.uns["scycle"]["enrich_components"].values())
+        components = list(_adata_ref.uns["scycle"]["enrich_components"]["indices"].values())
 
     if verbose:
         print("-- Integrating datasets...")

@@ -56,7 +56,7 @@ def filter_cells(adata: AnnData,
         scrub = scr.Scrublet(adata.X, 
                              total_counts = scrublet_kwargs['total_counts'],
                              sim_doublet_ratio = scrublet_kwargs['sim_doublet_ratio'],
-                             n_neihbors = scrublet_kwargs['n_neighbors'],
+                             n_neighbors = scrublet_kwargs['n_neighbors'],
                              expected_doublet_rate = scrublet_kwargs['expected_doublet_rate'],
                              stdev_doublet_rate = scrublet_kwargs['stdev_doublet_rate'],
                              random_state = scrublet_kwargs['random_state'])

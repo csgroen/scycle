@@ -3,8 +3,9 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from anndata import AnnData
+from ._remap_nodes import remap_nodes
 
-def celldiv_moment (adata: AnnData, var = 'total_counts', verbose: bool= True):
+def celldiv_moment (adata: AnnData, var = 'total_counts', remap = True, verbose: bool= True):
     """Find moment of cell division
     
     Parameters
@@ -14,7 +15,9 @@ def celldiv_moment (adata: AnnData, var = 'total_counts', verbose: bool= True):
         evaluated by `tl.principal.circle`
     var: string
         Name of a variable in adata.obs used to compute the moment of cell division.
-    verbose:
+    remap: bool
+        If True, nodes will be remaped using the suggested edge
+    verbose: bool
         If True, the function will print messages.
     
     Returns
@@ -52,6 +55,8 @@ def celldiv_moment (adata: AnnData, var = 'total_counts', verbose: bool= True):
     adata.uns['scycle']['cell_div_moment'] = {'ref_var': var,
                                               'cell_div_edge': sugg_edge, 
                                               'cell_cycle_direction': direction}
+    if remap:
+        remap_nodes(adata, verbose = verbose)
     
 def _edgeRegCoefficient(edges, start_edge = 0, end_edge = None):
     nedge = edges.shape[0]

@@ -13,6 +13,7 @@ from ..data import (
     g2m_inhibitory_markers,
     histone_markers,
 )
+from ._enrich_components import enrich_components
 
 def dimensionality_reduction(
     adata: AnnData,
@@ -21,6 +22,7 @@ def dimensionality_reduction(
     sig_names: list = ["G1/S", "G2/M"],
     seed: Optional[int] = None,
     max_iter: int = 200,
+    find_cc_comps: bool = True,
     verbose: bool = True,
 ):
     """Dimensionality reduction for pseudotime computation
@@ -45,6 +47,9 @@ def dimensionality_reduction(
         Used for 'nmf', 'ica', 'nmfCCgenes' and 'icaCCgenes' methods.
     max_iter: int
         Maximum numhistone_markersber of iterations during FastICA and NMF fit.
+    find_cc_comps: bool
+        If True and method='ica', components will be scored to find
+        cell cycle-related components
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -105,6 +110,9 @@ def dimensionality_reduction(
         "n_comps": n_comps,
         "seed": seed,
     }
+    
+    if method=='ica' and find_cc_comps:
+        enrich_components(adata, verbose = verbose)
 
 
 def _adata_CCgenes(adata, sig_names):
