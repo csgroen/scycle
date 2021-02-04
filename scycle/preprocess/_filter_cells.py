@@ -8,8 +8,8 @@ from anndata import AnnData
 
 def filter_cells(
     adata: AnnData,
-    min_counts: int = 10000,
-    max_counts: int = 50000,
+    min_counts: int = -1,
+    max_counts: int = -1,
     max_mt_ratio: int = 20,
     doublet_detection: bool = True,
     scrublet_kwargs: dict = {
@@ -30,8 +30,10 @@ def filter_cells(
         The AnnData object to be pre-processed.
     min_counts: int
         Minimum number of counts required for a cell to pass filtering.
+        -1 -> 5% counts quantile
     max_counts: int
         Maximum number of counts required for a cell to pass filtering.
+        -1 -> 95% counts quantile
     max_mt_ratio: int
         Maximum proportion of mitochondrial genes in a cell to pass
         filtering.
@@ -59,6 +61,13 @@ def filter_cells(
     sc.pp.calculate_qc_metrics(
         adata, qc_vars=["mt"], percent_top=None, log1p=False, inplace=True
     )
+
+    # -- min/max suggestion
+    counts = adata.X.sum(axis=1)
+    if min_counts == -1:
+        min_counts = np.quantile(counts, 0.05)
+    if max_counts == -1:
+        max_counts = np.quantile(counts, 0.95)
 
     if doublet_detection:
         scrub = scr.Scrublet(
