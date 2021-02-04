@@ -11,7 +11,7 @@ def prep_pooling(
     adata: AnnData,
     dim_red_method_pooling: str = "pca",
     n_neighbors: int = 5,
-    embed_n_comps: int = 20,  
+    embed_n_comps: int = 20,
     normalize_counts: bool = True,
     filter_var_genes: bool = True,
     n_top_genes: int = 10000,
@@ -55,18 +55,22 @@ def prep_pooling(
     ----------
     None
     """
-    if 'scycle' in adata.uns:
-        if 'preprocess' in adata.uns['scycle'].keys():
+    if "scycle" in adata.uns:
+        if "preprocess" in adata.uns["scycle"].keys():
             raise Exception("Data has already been pre-processed")
 
     if verbose:
         print("Preparing embedding...")
 
     assert division_factor != 0, "Null division factor. Terminating..."
+
+    # -- sparse -> array
+    if "scipy.sparse" in str(type(adata.X)):
+        adata.X = adata.X.toarray()
     adata.X = adata.X / division_factor
 
-    if len(adata.layers.keys()) == 0: # keep "raw" data
-        adata.layers['matrix'] = adata.X
+    if len(adata.layers.keys()) == 0:  # keep "raw" data
+        adata.layers["matrix"] = adata.X
 
     adata_simple = adata.copy()
     prep_simple(
@@ -90,7 +94,7 @@ def prep_pooling(
     if verbose:
         print("Pooling", str(X_embed.shape[0]), "cells...")
     _smooth_adata_by_pooling(adata, X_embed, n_neighbours=n_neighbors)
-    
+
     prep_simple(
         adata,
         normalize_counts,
@@ -101,20 +105,21 @@ def prep_pooling(
         1,
         verbose,
     )
-    
-    if 'scycle' not in adata.uns.keys():
-        adata.uns['scycle'] = {}
-        
-    adata.uns["scycle"]['preprocess'] = {
-            "method": "pooling",
-            "n_neighbors": n_neighbors,
-            "normalize_counts": normalize_counts,
-            "filter_var_genes": filter_var_genes,
-            "division_factor": division_factor,
-            "log_transform": log_transform,
-            "n_top_genes": n_top_genes,
-            "embed_n_comps": embed_n_comps
-            }
+
+    if "scycle" not in adata.uns.keys():
+        adata.uns["scycle"] = {}
+
+    adata.uns["scycle"]["preprocess"] = {
+        "method": "pooling",
+        "n_neighbors": n_neighbors,
+        "normalize_counts": normalize_counts,
+        "filter_var_genes": filter_var_genes,
+        "division_factor": division_factor,
+        "log_transform": log_transform,
+        "n_top_genes": n_top_genes,
+        "embed_n_comps": embed_n_comps,
+    }
+
 
 def _embed_for_pooling(adata, dim_red, n_comps):
     if dim_red == "pca":
