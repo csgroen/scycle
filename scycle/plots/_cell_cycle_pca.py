@@ -10,14 +10,9 @@ from plotnine import (
     scale_color_cmap,
     labs,
 )
+from ._themes import theme_std
 
-# from ._themes import theme_std
-from plotnine import theme_light, theme, element_blank
-
-theme_std = theme_light() + theme(panel_grid=element_blank())
-
-
-def scatter_projection(
+def cell_cycle_pca(
     adata,
     col_var="total_counts",
     shape_var=None,
@@ -132,3 +127,53 @@ def scatter_projection(
             )
 
     return proj_plot
+
+import warnings
+def scatter_projection(
+    adata,
+    col_var="total_counts",
+    shape_var=None,
+    palette="viridis",
+    size=1.5,
+    alpha=0.7,
+    trajectory=False,
+    node_size=7,
+    node_color="lightgrey",
+    show_nid=True,
+):
+    """DEPRECATED. see: cell_cycle_pca
+
+    Parameters
+    -------------
+    adata: AnnData
+        The AnnData object being used for the analysis. Must be previously
+        evaluated by `tl.dimensionality_reduction`
+    col_var: str
+        The variable to be used to color the points. Must be present in adata.obs
+    shape_var: str
+        The variable to be mapped to the shape of the points. Must be present in adata.obs
+    palette: str
+        A `cmap` palette to be used for coloring the scatterplot.
+    size: float
+        Controls the size of the points of the scatterplot.
+    alpha: float
+        Controls the transparency of the points of the scatterplot.
+        [0 = completly transparent, 1 = completly opaque]
+    trajectory: bool
+        If True and the principal circle has already been calculated, the trajectory
+        is added.
+    node_size: float
+        Controls the size of the node points of the principal circle.
+    node_color: str
+        If 'total_counts', shows the node average total_counts. Otherwise, must
+        be a supported color name. e.g. node_color = 'black'.
+    show_nid: bool
+        If True, shows the node identified by the node points.
+
+    Returns
+    --------------
+    A plotnine scatter plot of the 2-D projection of all cells.
+    """
+    warnings.warn("scatter_projection is deprecated; use cell_cycle_pca", DeprecationWarning)
+    return (cell_cycle_pca(adata, col_var, shape_var, palette, size, alpha, trajectory,
+    node_size, node_color, show_nid))

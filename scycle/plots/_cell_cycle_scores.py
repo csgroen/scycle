@@ -14,11 +14,12 @@ from plotnine import (
 from plotnine.scales import scale_color_manual
 from ._scatter_pseudotime import scatter_pseudotime
 from scipy.stats import zscore
+import warnings
 
 pd.set_option("chained_assignment", None)
 
 
-def scatter_cell_cycle(
+def cell_cycle_scores(
     adata,
     scores=["signatures", "components"][0],
     size=1.5,
@@ -118,9 +119,22 @@ def scatter_cell_cycle(
     else:
         return time_scatter
 
-
 def _add_compScores(adata):
-    ecom_idx = adata.uns['scycle']['enrich_components']['indices']
+    ecom_idx = adata.uns['scycle']['find_cc_components']['indices']
     for comp, i in ecom_idx.items():
         cname = comp + ' comp'
         adata.obs[cname] = zscore(adata.obsm['X_dimRed'][:,i])
+
+def scatter_cell_cycle(
+    adata,
+    scores=["signatures", "components"][0],
+    size=1.5,
+    alpha=1,
+    curvature_shrink=1,
+    lab_ypos=2,):
+    """DEPRECATED: cell_cycle_scores
+    """
+    warnings.warn("scatter_cell_cycle is deprecated; use cell_cycle_scores", DeprecationWarning)
+    return (cell_cycle_scores(adata, scores, size, alpha, curvature_shrink, lab_ypos))
+
+

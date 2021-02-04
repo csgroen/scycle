@@ -10,8 +10,8 @@ import numpy as np
 from ._prep_pooling import prep_pooling
 from ..tools import (
     dimensionality_reduction,
-    enrich_components,
-    principal_circle,
+    find_cc_components,
+    trajectory,
     pseudotime,
 )
 
@@ -25,14 +25,15 @@ def normalize_by_partition(
 
     """Normalize samples by median partition library size
 
-     This procedure improves the discovery of the cell division moment.
+     This procedure improves the discovery of the cell division node.
 
     Parameters
     ------------
     adata_src: AnnData
-        Unprocessed AnnData
+        AnnData object that has been through quality control and pre-processing
     adata_ref: AnnData
-        Reference AnnData object, that has been processed.
+        Reference AnnData object. If not provided, trajectory and partitions are
+        calculated with default values from adata_src.
     rerun_pc: bool
         If True, `tl.principal circle` is re-run with n_ref_parts as n_nodes
     n_ref_parts: int
@@ -50,27 +51,28 @@ def normalize_by_partition(
         print("Preprocessing reference with default values...")
         prep_pooling(adata_ref, verbose=False)
         dimensionality_reduction(adata_ref, method="ica", verbose=False)
-        enrich_components(adata_ref, verbose=False)
+        find_cc_components(adata_ref, verbose=False)
     elif 'dimRed' not in adata_ref.uns['scycle'].keys():
         print("Preprocessing reference with default values...")
         dimensionality_reduction(adata_ref, method="ica", verbose=False)
-        enrich_components(adata_ref, verbose=False)
-    elif 'enrich_components' not in adata_ref.uns['scycle'].keys():
+        find_cc_components(adata_ref, verbose=False)
+    elif 'find_cc_components' not in adata_ref.uns['scycle'].keys():
         if adata_ref.uns['scycle']['dimRed']['method'] == 'ica':
             print("Preprocessing reference with default values...")
-            enrich_components(adata_ref, verbose=False)
+            find_cc_components(adata_ref, verbose=False)
 
-    pc_didntrun = "principal_circle" not in adata_ref.uns["scycle"].keys()
+    pc_didntrun = "trajectory" not in adata_ref.uns["scycle"].keys()
     if pc_didntrun | rerun_pc:
         if verbose:
-            print("-- Running `tl.principal_circle` with n_ref_parts...")
-        principal_circle(adata_ref, n_nodes=n_ref_parts, verbose=False)
+            print("-- Running `tl.trajectory` with n_ref_parts...")
+        trajectory(adata_ref, n_nodes=n_ref_parts, verbose=False)
         pseudotime(adata_ref, scale = False, verbose = False)
 
     old_totals = adata_ref.obs["total_counts"]
 
     # ---- Get partitions and re-normalize
     prt = adata_ref.obs["partition"]
+    
     gexp_raw = adata_src.layers['matrix'] # "raw" data
     gexp = adata_src.X
 
@@ -105,6 +107,7 @@ def normalize_by_partition(
     part_meds = np.array(medians).reshape(len(gexp), 1)
     part_rmeds = np.array(rmedians).reshape(len(gexp), 1)
     adata_src.layers['matrix'] = gexp_raw / rtotals * part_rmeds
+    adata_src.layers['unnorm'] = gexp
     adata_src.X = gexp / totals * part_meds
     
     new_totals = adata_src.layers['matrix'].sum(1)

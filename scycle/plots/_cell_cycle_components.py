@@ -5,17 +5,18 @@ from plotnine.facets import facet_wrap
 import matplotlib as mpl
 import numpy as np
 from ._themes import theme_std
+import warnings
 
 
-def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
+def cell_cycle_components(adata, plot_type = 'panel', palette = 'Set1'):
     """Plots a scatter plot of trajectory vs component scores for each component
-    from the dimensionality reduction
+    from the dimensionality reduction, highlighting the selected cell cycle components
 
     Parameters
     --------------
     adata: AnnData
         The AnnData object being used for the analysis. Must be previously
-        evaluated by `tl.enrich_components` and `tl.principal_circle`.
+        evaluated by `tl.find_cc_components` and `tl.principal_circle`.
     plot_type: str
         One of 'all' or 'panel'
     palette: 'str'
@@ -31,7 +32,8 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
     proj = adata.obsm['X_dimRed']
     n_ics = proj.shape[1]
     spart = adata.obs['partition'].values
-    comps = adata.uns['scycle']['enrich_components']['indices']
+    comps = adata.uns['scycle']['find_cc_components']['indices']
+    comps_found = list(comps.keys())
     
     #-- Make IC dataframe
     ic_df = pd.DataFrame(proj)
@@ -47,12 +49,10 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
     
     if plot_type == 'all':
         #-- Add variables for mapping plotting
-        ic_trajm = _update_ictrajm(ic_trajm, comps, 'G1/S')
-        ic_trajm = _update_ictrajm(ic_trajm, comps, 'G2/M+')
-        ic_trajm = _update_ictrajm(ic_trajm, comps, 'G2/M-')
-        ic_trajm = _update_ictrajm(ic_trajm, comps, 'Histone')
+        for cp in comps_found:
+            ic_trajm = _update_ictrajm(ic_trajm, comps, cp)
         
-        idx = [i not in list(comps.keys()) for i in ic_trajm['IC']]
+        idx = [i not in comps_found for i in ic_trajm['IC']]
         ic_trajm['ccIC'] = 'cell cycle IC'
         ic_trajm.loc[idx,'ccIC'] = 'other'
         
@@ -76,11 +76,26 @@ def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
     
     elif plot_type == 'panel':
         #-- Add variables for mapping plotting
-        ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-        ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
-        ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
-        ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
-        ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3, ic_trajm4])
+        if 'Histone' and 'G2/M-' in comps_found:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
+            ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
+            ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3, ic_trajm4])
+        elif 'Histone' in comps_found:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
+            ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm4])
+        elif 'G2/M-' in comps_found:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
+            ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3])
+        else:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2])
 
         #-- Get mapping colors
         cmap = mpl.cm.get_cmap(palette, 5)
@@ -112,5 +127,11 @@ def _multi_ictrajm(icdf, comps, var):
     icdf.loc[idx, 'IC'] = var
     icdf.loc[np.invert(idx),'IC'] = 'other'
     return icdf
+
+def scatter_enrich_components(adata, plot_type = 'panel', palette = 'Set1'):
+    """DEPRECATED: use cell_cycle_components
+    """
+    warnings.warn("scatter_enrich_components is deprecated; use cell_cycle_components", DeprecationWarning)
+    return (cell_cycle_components(adata, plot_type, palette))
     
 

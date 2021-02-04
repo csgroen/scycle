@@ -8,7 +8,7 @@ from anndata import AnnData
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
-from ._enrich_components import enrich_components
+from ._find_cc_components import find_cc_components
 
 
 def integration(
@@ -69,9 +69,9 @@ def integration(
     if len(components) == 0:
         if verbose:
             print("-- Automatically detecting cell-cycle components...")
-        if "enrich_components" not in _adata_ref.uns["scycle"].keys():
-            enrich_components(_adata_ref)
-        components = list(_adata_ref.uns["scycle"]["enrich_components"]["indices"].values())
+        if "find_cc_components" not in _adata_ref.uns["scycle"].keys():
+            find_cc_components(_adata_ref)
+        components = list(_adata_ref.uns["scycle"]["find_cc_components"]["indices"].values())
 
     if verbose:
         print("-- Integrating datasets...")
@@ -136,11 +136,9 @@ def integration(
         print("-- Done")
 
     # -- Update X_pca_scycle so that all datasets are expressed in the same {PC} subspace
-    if Xt.shape[1] >= 4:
-        pca = PCA(n_components=3, svd_solver="arpack")
-        _adata_src.obsm["X_pca_scycle"] = pca.fit_transform(_adata_src.obsm["X_cc"])
-    else:
-        _adata_src.obsm["X_pca_scycle"] = _adata_src.obsm["X_cc"]
+    pca = PCA(n_components=3, svd_solver="arpack")
+    pca.fit(_adata_ref.obsm['X_cc'])
+    _adata_src.obsm["X_pca_scycle"] = pca.transform(_adata_src.obsm['X_cc'])
 
     # -- Add integration arguments
     ref_dimred = _adata_ref.uns["scycle"]["dimRed"]

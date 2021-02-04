@@ -6,10 +6,11 @@ from ..data import (
     g2m_inhibitory_markers,
     histone_markers,
 )
+import warnings
 
 
-def enrich_components(adata, thr=3, verbose=True):
-    """Pathway enrichment for components from the dimensionality reduction
+def find_cc_components(adata, thr=3, verbose=True):
+    """Find cell cycle related components using cell cycle signature annotations
 
     Parameters
     --------------
@@ -111,7 +112,7 @@ def enrich_components(adata, thr=3, verbose=True):
     #-- Overwrite
     adata.obsm["X_cc"] = xdr
     adata.obsm["X_pca_scycle"] = xdr3d
-    adata.uns["scycle"]["enrich_components"] = {
+    adata.uns["scycle"]["find_cc_components"] = {
         'scores': cc_scores,
         'indices': idx_dict
         }
@@ -121,3 +122,9 @@ def _compute_scores(adata, marker_genes):
     positions = [adata.var_names.get_loc(g) for g in marker_genes]
     return adata.uns["dimRed"].S_[:, positions].mean(axis=1)
 
+def enrich_components(adata, thr=3, verbose=True):
+    """DEPRECATED: use find_cc_components
+    """
+    warnings.warn("enrich_components is deprecated; use find_cc_components", DeprecationWarning)
+    return (find_cc_components(adata, thr, verbose))
+    

@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 from plotnine import ggplot, aes, geom_point, geom_path, geom_smooth, annotate, labs, geom_col, scale_fill_manual
 from ._themes import theme_std
+import warnings
 
-def lineplot_celldiv_moment(adata): 
+def cell_division(adata): 
     """ Plots total_counts as a function of the principal circle nodes to
     visualize the moment of cell division.
     
@@ -40,3 +41,9 @@ def lineplot_celldiv_moment(adata):
      + theme_std)
     
     return cell_div_plot
+
+def lineplot_celldiv_moment(adata):
+    """DEPRECATED: use cell_division
+    """
+    warnings.warn("lineplot_celldiv is deprecated; use cell_division", DeprecationWarning)
+    return (cell_division(adata))

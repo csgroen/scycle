@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from ._enrich_components import enrich_components
+from ._find_cc_components import find_cc_components
 from ._subtract_cc import subtract_cc
 
 
@@ -13,14 +13,14 @@ def classify_genes_by_ic(adata, min_r2=0.5, verbose=False):
         )
         subtract_cc(adata)
 
-    if "enrich_components" not in adata.uns["scycle"]:
+    if "find_cc_components" not in adata.uns["scycle"]:
         print(
-            "Components enrichment was not performed. Doing it now with default values..."
+            "Cell cycle components were not found. Doing it now with default values..."
         )
-        enrich_components(adata, verbose=verbose)
+        find_cc_components(adata, verbose=verbose)
 
     # Computing most important IC for each gene
-    components = list(adata.uns["scycle"]["enrich_components"].values())
+    components = list(adata.uns["scycle"]["find_cc_components"].values())
     is_4d = len(components) == 4
     maxes = np.argmax(adata.varm["P_dimRed"][components, :], axis=0)
 

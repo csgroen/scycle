@@ -5,10 +5,11 @@ import pandas as pd
 import elpigraph
 from anndata import AnnData
 from sklearn.decomposition import PCA
-from ._enrich_components import enrich_components
+from ._find_cc_components import find_cc_components
+import warnings
 
 
-def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
+def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
     cell-cycle pseudotime
 
@@ -27,12 +28,6 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     `adata` will be updated with the coordinates of the nodes and edges of the
     principal circle.
     """
-    if "X_cc" not in adata.obsm:
-        print(
-            "Warning, components must be enriched before principal circle computation."
-        )
-        print("Computing component enrichment with default values...")
-        enrich_components(adata, verbose=verbose)
     X_emb = (
         adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
     )
@@ -145,3 +140,10 @@ def _get_edge_coords(point_coords, edges):
     node_order = s_order
 
     return edge_coords, node_order
+
+def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
+    """DEPRECATED: use trajectory
+    """
+    warnings.warn("principal_circle is deprecated; use trajectory", DeprecationWarning)
+    return (trajectory(adata, n_nodes, verbose))
+

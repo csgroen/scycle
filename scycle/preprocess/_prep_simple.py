@@ -8,6 +8,7 @@ from ..data import (
     g1s_markers,
     histone_markers,
 )
+from scipy.stats import zscore
 
 def prep_simple(
     adata: AnnData,
@@ -62,13 +63,9 @@ def prep_simple(
 
     if score_cell_cycle:
         if verbose: print('Scoring cell cycle...')
-        sc.tl.score_genes(adata, g1s_markers, score_name = 'G1-S')
-        sc.tl.score_genes(adata, g2m_markers, score_name = 'G2-M')
-        sc.tl.score_genes(adata, histone_markers, score_name = 'Histones')
-    
-        # sigs = ['G1-S', 'G2-M', 'Histones']
-        # for sig in sigs: 
-        #     adata.obs[sig] = adata.obs[sig]/np.max(adata.obs[sig])
+        _score_cell_cycle(adata, g1s_markers, 'G1-S')
+        _score_cell_cycle(adata, g2m_markers, 'G2-M')
+        _score_cell_cycle(adata, histone_markers, 'Histones')
 
     # Highly variable genes filtering
     if filter_var_genes:
@@ -96,3 +93,8 @@ def prep_simple(
                 "n_top_genes": n_top_genes,
             }
         }
+        
+def _score_cell_cycle(adata, markers, score_name):
+    sc.tl.score_genes(adata, markers, score_name = score_name)
+    adata.obs[score_name] = zscore(adata.obs[score_name])
+    

@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import numpy as np
+import elpigraph
 from typing import Optional
 
 # from sklearn.cross_decomposition import CCA
 from sklearn.decomposition import PCA
 from sica.base import StabilizedICA
 from anndata import AnnData
-from ..data import (
-    g2m_markers,
-    g1s_markers,
-    g2m_inhibitory_markers,
-    histone_markers,
-)
-from ._enrich_components import enrich_components
+from ..data import cc_genes
+from ._find_cc_components import find_cc_components
+from ._subtract_cc import _cc_residue_matrix
 
 def dimensionality_reduction(
     adata: AnnData,
     method: str = "ica",
     n_comps: int = 30,
-    sig_names: list = ["G1/S", "G2/M"],
     seed: Optional[int] = None,
     max_iter: int = 200,
+    self_consistent_kwargs = {
+        'n_nodes': 30,
+        'max_iter': 10,
+        'eps_jaccard': 0.02,
+        'Mu': 0.01,
+        'r2_threshold': 0.5
+        },
     find_cc_comps: bool = True,
     verbose: bool = True,
 ):
@@ -34,19 +37,20 @@ def dimensionality_reduction(
         pp.prep_simple or pp.prep_pooling.
     method: str
         Method of dimensionality reduction, currently one of: 'pca', 'ica',
-        'pcaCCgenes','icaCCgenes','CCgenes'.
-        The 'CCgenes' variant use the methods only on the set of cell-cycle genes.
-        'CCgenes' uses the G1-S and G2-M signature scores as the reduced dimensions.
+        'pcaCCgenes','icaCCgenes','self_consistent_CC'.
+        The 'self_consistent_pcaCC' find the self-consistent cell cycle space based on an
+        initial estimation using ICA and finding the cell cycle ICs, and 
+        then using the trajectory to find the genes that are most informative 
+        to find cell cycle space.
     n_comps: int
         Number of components to use for the dimensionality reduction.
-    sig_names: list
-        Used only for 'CCgenes'. List of signature names to use as reference
-        cell cycle dimensions. Must be present as scores per sample in adata.obs
     seed: int
         Sets up the random state for FastICA and NMF for results reproducibility.
-        Used for 'nmf', 'ica', 'nmfCCgenes' and 'icaCCgenes' methods.
+        Used for 'ica' and'icaCCgenes' methods.
     max_iter: int
         Maximum numhistone_markersber of iterations during FastICA and NMF fit.
+    self_consistent_kwargs:
+        A dictionary of arguments used if method = 'self_consistent_cc'.
     find_cc_comps: bool
         If True and method='ica', components will be scored to find
         cell cycle-related components
@@ -68,7 +72,7 @@ def dimensionality_reduction(
         )
 
     if method in ["pcaCCgenes", "icaCCgenes"]:
-        adata_cc = _adata_CCgenes(adata, sig_names)
+        adata_cc = _adata_CCgenes(adata)
         genes = np.array(adata_cc.var.index)
     else:
         genes = np.array(adata.var.index)
@@ -85,18 +89,29 @@ def dimensionality_reduction(
         dimred_res = _dimRed_ica(
             adata_cc, max_iter=max_iter, seed=seed, n_comps=n_comps, verbose=verbose
         )
+    elif method == "self_consistent_CC":
+        dimred_res = _dimRed_self_consistent_cc(adata, n_comps=n_comps, 
+                                                max_iter = self_consistent_kwargs['max_iter'],
+                                                n_nodes = self_consistent_kwargs['n_nodes'],
+                                                eps_jaccard= self_consistent_kwargs['eps_jaccard'],
+                                                r2_threshold = self_consistent_kwargs['r2_threshold'],
+                                                verbose=verbose)
+        
     else:
         raise Exception(
             (
                 "Not one of the supported methods.\n"
-                + "Must be one of: pca, ica, nmf, pcaCCgenes, icaCCgenes"
+                + "Must be one of: pca, ica, pcaCCgenes, icaCCgenes or self_consistent_CC"
             )
         )
 
     X_dimRed = dimred_res["dimred"]
     adata.obsm["X_dimRed"] = X_dimRed
     adata.uns["dimRed"] = dimred_res["obj"]
-    adata.varm["P_dimRed"] = dimred_res["pMatrix"]
+    if method in ['ica', 'pca']:
+        adata.varm["P_dimRed"] = dimred_res["pMatrix"]
+    else:
+        adata.uns['P_dimRed'] = dimred_res["pMatrix"]
 
     # -- 3D
     pca_dimRed = PCA(n_components=3)
@@ -110,20 +125,16 @@ def dimensionality_reduction(
         "n_comps": n_comps,
         "seed": seed,
     }
+    if method == 'self_consistent_CC':
+        adata.uns['scycle'].pop('find_cc_components')
+        del adata.obsm['X_cc']
+        adata.uns['scycle']['dimRed']['cc_genes'] = dimred_res['cc_genes']
     
     if method=='ica' and find_cc_comps:
-        enrich_components(adata, verbose = verbose)
+        find_cc_components(adata, verbose = verbose)
 
 
-def _adata_CCgenes(adata, sig_names):
-    # -- Get CC genes
-    cc_sigs = {'G1/S': g1s_markers, 'G2/M': g2m_markers, 'Histones': histone_markers,
-               'G2/M-': g2m_inhibitory_markers}
-    
-    flat_sigs = [
-        item for sublist in [v for k, v in cc_sigs.items() if k in sig_names] for item in sublist
-    ]
-    cc_genes = np.unique(np.array(flat_sigs))
+def _adata_CCgenes(adata):
     # -- Select in matrix
     adata_cc = adata.copy()
     idx = [gene in adata_cc.var_names.tolist() for gene in cc_genes]
@@ -137,7 +148,7 @@ def _dimRed_pca(adata, n_comps, verbose=False):
     pca = PCA(n_components=n_comps)
     pca.fit(adata.X)
     X_dimRed = pca.transform(adata.X)
-    return {"obj": pca, "dimred": X_dimRed, "pMatrix": pca.components_}
+    return {"obj": pca, "dimred": X_dimRed, "pMatrix": np.linalg.pinv(pca.components_)}
 
 
 def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
@@ -156,3 +167,67 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
 
 def _dimRed_decomp(adata, decomp, feats, ccomps):
     return {"obj": decomp, "dimred": decomp.transform(adata.X[:, feats])[:, ccomps]}
+
+
+
+def _dimRed_self_consistent_cc(adata, 
+                               n_comps = 30, 
+                               n_nodes = 30, 
+                               max_iter = 10,
+                               Mu = 0.01, 
+                               r2_threshold = 0.5, 
+                               eps_jaccard = 0.02, 
+                               verbose = True):
+    
+    if verbose:
+        print("Dimensionality reduction using self consistent trajectory...")
+        print("Initial estimation using ICA...")
+        
+    dimensionality_reduction(adata, method = 'ica', find_cc_comps=True, verbose = False)
+    Xr = adata.obsm['X_cc']
+    
+    #-- Run initial iteration with cc_genes
+    r2scores, ind = _genes_ccspace(adata.X, Xr, n_comps, n_nodes, Mu, r2_threshold)
+    top_thr = np.min([np.quantile(r2scores[ind], 0.9)])
+
+    if verbose:
+        print('Cell cycle genes initially found:',len(ind))
+        print('Top ones:',list(adata.var_names[r2scores > top_thr]))    
+    
+    ind_old = ind
+    for counter in range(max_iter):
+        X_cc = adata.X[:,ind]
+        Xr = PCA(n_components=np.min([n_comps, X_cc.shape[1]])).fit_transform(X_cc)
+        r2scores, ind = _genes_ccspace(adata.X, Xr, n_comps, n_nodes, Mu, r2_threshold)
+        
+        idx_common_genes = list(set(ind)&set(ind_old))
+        union_genes = list(set(ind)|set(ind_old))
+        perc = len(idx_common_genes)/len(union_genes)
+            
+        if verbose:
+            print('\n\nIteration',counter+1,'==================\nJaccard coeff:',perc,'Old:',len(ind_old),'New:',len(ind),'\n==================\n')
+        if perc>1-eps_jaccard:
+            break
+        ind_old = ind.copy()
+    
+    genes_cc_space = adata.var_names[ind]
+    pca = PCA(n_components=n_comps).fit(adata.X[:,ind])
+    X_dimRed = pca.transform(adata.X[:,ind])
+    
+    adata.uns['scycle']['cc_genes'] = genes_cc_space
+    return {"obj": pca, "dimred": X_dimRed, "pMatrix": np.linalg.pinv(pca.components_), 
+            'cc_genes': genes_cc_space}
+    
+    
+        
+def _genes_ccspace(X, Xr, n_comps, n_nodes, Mu, r2_threshold):
+    #-- Get initial trajectory
+    egr = elpigraph.computeElasticPrincipalCircle(Xr,n_nodes,Mu=Mu,verbose=False)
+    nodep = egr[0]['NodePositions']
+    partition, dists = elpigraph.src.core.PartitionData(X = Xr, NodePositions = nodep, 
+                                                        MaxBlockSize = 100000000, TrimmingRadius = np.inf,
+                                                        SquaredX = np.sum(Xr**2,axis=1,keepdims=1))
+        
+    residue_matrix, r2scores = _cc_residue_matrix(X, partition.flatten())
+    ind = np.where(r2scores>r2_threshold)[0]
+    return((r2scores, ind))

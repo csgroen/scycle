@@ -3,8 +3,9 @@
 import pandas as pd
 from plotnine import ggplot, aes, geom_point, labs
 from ._themes import theme_std
+import warnings
 
-def scatter_pseudotime(adata, y, size = 1.5, alpha = 1, color = 'black'):
+def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
     """Plots a scatter plot of pseudotime vs one or multiple variables
 
     Parameters
@@ -62,3 +63,9 @@ def scatter_pseudotime(adata, y, size = 1.5, alpha = 1, color = 'black'):
          + theme_std)
 
     return time_scatter
+
+def scatter_pseudotime(adata, y, size = 1.5, alpha = 1, color = 'black'):
+    """DEPRECATED: use pseudotimecell_division
+    """
+    warnings.warn("scatter_pseudotime is deprecated; use pseudotime_scatter", DeprecationWarning)
+    return (pseudotime_scatter(adata))

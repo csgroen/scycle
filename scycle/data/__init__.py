@@ -7,4 +7,5 @@ from ._cc_markers import (
     g1s_markers,
     g2m_inhibitory_markers,
     histone_markers,
+    cc_genes,
 )
