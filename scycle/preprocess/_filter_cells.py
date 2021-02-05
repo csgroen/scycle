@@ -30,10 +30,10 @@ def filter_cells(
         The AnnData object to be pre-processed.
     min_counts: int
         Minimum number of counts required for a cell to pass filtering.
-        -1 -> 5% counts quantile
+        -1 -> median(counts) - std(counts)
     max_counts: int
         Maximum number of counts required for a cell to pass filtering.
-        -1 -> 95% counts quantile
+        -1 -> median(counts) + std(counts)
     max_mt_ratio: int
         Maximum proportion of mitochondrial genes in a cell to pass
         filtering.
