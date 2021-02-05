@@ -64,10 +64,12 @@ def filter_cells(
 
     # -- min/max suggestion
     counts = adata.X.sum(axis=1)
+    md = np.median(counts)
+    sd = np.std(counts)
     if min_counts == -1:
-        min_counts = np.quantile(counts, 0.05)
+        min_counts = max(0, md - sd)
     if max_counts == -1:
-        max_counts = np.quantile(counts, 0.95)
+        max_counts = md + sd
 
     if doublet_detection:
         scrub = scr.Scrublet(
