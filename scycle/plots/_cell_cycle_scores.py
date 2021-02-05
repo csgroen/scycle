@@ -12,7 +12,7 @@ from plotnine import (
     labs,
 )
 from plotnine.scales import scale_color_manual
-from ._scatter_pseudotime import scatter_pseudotime
+from ._pseudotime_scatter import pseudotime_scatter
 from scipy.stats import zscore
 import warnings
 
