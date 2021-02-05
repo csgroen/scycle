@@ -90,6 +90,7 @@ def prep_pooling(
     X_embed = _embed_for_pooling(
         adata_simple, dim_red_method_pooling, n_comps=embed_n_comps
     )
+    del adata_simple
 
     if verbose:
         print("Pooling", str(X_embed.shape[0]), "cells...")

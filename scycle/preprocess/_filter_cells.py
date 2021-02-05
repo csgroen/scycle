@@ -71,6 +71,7 @@ def filter_cells(
     if max_counts == -1:
         max_counts = md + sd
 
+    # -- Doublet detection
     if doublet_detection:
         scrub = scr.Scrublet(
             adata.X,
@@ -90,7 +91,7 @@ def filter_cells(
             & (adata.obs["total_counts"] < max_counts)
             & (adata.obs["total_counts"] > min_counts)
         )
-        adata.uns["scrublet"] = scrub
+        del scrub
     else:
         inds1 = np.where(
             (adata.obs["total_counts"] > min_counts)
