@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='scycle',
-      version='0.1.11',
+      version='0.1.12',
       description='Cell cycle pseudotime in single-cell RNA-seq',
       url='http://github.com/csgroen/scycle',
       author=['Clarice Groeneveld', 'Andrei Zinovyev', 'Aziz Fouche'],
@@ -18,5 +18,8 @@ setup(name='scycle',
           'typing',
           'POT',
           'scrublet',
+          'sica @ git+https://github.com/ncaptier/Stabilized_ICA',
+          'WOTi @ git+https://github.com/Risitop/WOTi',
       ],
+      dependency_links=[],
       zip_safe=False)
