@@ -52,7 +52,7 @@ def prep_pooling(
     verbose: bool
         If True, messages about function progress will be printed.
 
-    Returnshttps://pandas.pydata.org/pandas-docs/stable/user_guide/scale.html
+    Returns
     ----------
     None
     """
