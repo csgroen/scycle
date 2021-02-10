@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from anndata import AnnData
 from ._prep_simple import prep_simple
+import gc
 
 
 def prep_pooling(
@@ -51,7 +52,7 @@ def prep_pooling(
     verbose: bool
         If True, messages about function progress will be printed.
 
-    Returns
+    Returnshttps://pandas.pydata.org/pandas-docs/stable/user_guide/scale.html
     ----------
     None
     """
@@ -63,11 +64,12 @@ def prep_pooling(
         print("Preparing embedding...")
 
     assert division_factor != 0, "Null division factor. Terminating..."
+    assert "float" in str(adata.X.dtype), "adata.X dtype must be float."
 
     # -- sparse -> array
     if "scipy.sparse" in str(type(adata.X)):
         adata.X = adata.X.toarray()
-    adata.X = adata.X / division_factor
+    np.divide(adata.X, division_factor, out=adata.X)
 
     if len(adata.layers.keys()) == 0:  # keep "raw" data
         adata.layers["matrix"] = adata.X
@@ -120,13 +122,14 @@ def prep_pooling(
         "n_top_genes": n_top_genes,
         "embed_n_comps": embed_n_comps,
     }
+    gc.collect()
 
 
 def _embed_for_pooling(adata, dim_red, n_comps):
     if dim_red == "pca":
         sc.tl.pca(adata, n_comps=n_comps)
         X_embed = adata.obsm["X_pca"]
-        return X_embed
+        return X_embed.copy()
 
 
 def _smooth_adata_by_pooling(adata, X_embed, n_neighbours=10, copy=False):

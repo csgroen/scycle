@@ -9,6 +9,8 @@ from ..data import (
     histone_markers,
 )
 from scipy.stats import zscore
+import gc
+
 
 def prep_simple(
     adata: AnnData,
@@ -52,20 +54,21 @@ def prep_simple(
     """
 
     assert division_factor != 0, "Null division factor. Terminating..."
-    adata.X = adata.X / division_factor
-    
-    if 'total_counts' not in adata.obs.keys():
-        adata.obs['total_counts'] = adata.X.sum(1)
-        
+    np.divide(adata.X, division_factor, out=adata.X)
+
+    if "total_counts" not in adata.obs.keys():
+        adata.obs["total_counts"] = adata.X.sum(1)
+
     # Normalization step
     if normalize_counts:
         sc.pp.normalize_total(adata, target_sum=np.median(adata.obs["total_counts"]))
 
     if score_cell_cycle:
-        if verbose: print('Scoring cell cycle...')
-        _score_cell_cycle(adata, g1s_markers, 'G1-S')
-        _score_cell_cycle(adata, g2m_markers, 'G2-M')
-        _score_cell_cycle(adata, histone_markers, 'Histones')
+        if verbose:
+            print("Scoring cell cycle...")
+        _score_cell_cycle(adata, g1s_markers, "G1-S")
+        _score_cell_cycle(adata, g2m_markers, "G2-M")
+        _score_cell_cycle(adata, histone_markers, "Histones")
 
     # Highly variable genes filtering
     if filter_var_genes:
@@ -93,8 +96,9 @@ def prep_simple(
                 "n_top_genes": n_top_genes,
             }
         }
-        
+    gc.collect()
+
+
 def _score_cell_cycle(adata, markers, score_name):
-    sc.tl.score_genes(adata, markers, score_name = score_name)
+    sc.tl.score_genes(adata, markers, score_name=score_name)
     adata.obs[score_name] = zscore(adata.obs[score_name])
-    

@@ -4,6 +4,7 @@ import scanpy as sc
 import scrublet as scr
 import numpy as np
 from anndata import AnnData
+import gc
 
 
 def filter_cells(
@@ -109,3 +110,4 @@ def filter_cells(
     if verbose:
         print("Cells selected", len(ind_cells))
     adata._inplace_subset_obs(ind_cells)
+    gc.collect()
