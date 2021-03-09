@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import woti
+#import woti
 
 from anndata import AnnData
 from sklearn.neighbors import NearestNeighbors
