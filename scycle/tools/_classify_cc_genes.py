@@ -37,10 +37,10 @@ def classify_genes_by_ic(adata, min_r2=0.5, verbose=False):
     ] = (3 if is_4d else 2)
 
     # trandforming ids -> str
-    maxes = np.where(maxes == 0, "G1/S", maxes)
-    maxes = np.where(maxes == "1", "G2/M+", maxes)
+    maxes = np.where(maxes == 0, "G1-S", maxes)
+    maxes = np.where(maxes == "1", "G2-M+", maxes)
     if is_4d:
-        maxes = np.where(maxes == "2", "G2/M-", maxes)
+        maxes = np.where(maxes == "2", "G2-M-", maxes)
     maxes = np.where(maxes == ("3" if is_4d else "2"), "HIST", maxes)
     maxes[adata.var["r2_scores"] < min_r2] = "unrelated"
 

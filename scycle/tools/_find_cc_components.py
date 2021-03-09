@@ -39,9 +39,9 @@ def find_cc_components(adata, thr=3, verbose=True):
     
     #-- Save scores before finding optimal indices
     cc_scores = {
-        'G1/S': g1s_scores,
-        'G2/M': g2m_scores,
-        'G2/M-': g2mi_scores,
+        'G1-S': g1s_scores,
+        'G2-M': g2m_scores,
+        'G2-M-': g2mi_scores,
         'Histone': histone_scores
         }
     
@@ -76,15 +76,15 @@ def find_cc_components(adata, thr=3, verbose=True):
         raise Exception("We couldn't find cell-cycle related components. Try decreasing the threshold.")
         
     indices = [g1s_idx, g2m_idx]
-    idx_dict = {'G1/S': g1s_idx, 'G2/M': g2m_idx}
+    idx_dict = {'G1-S': g1s_idx, 'G2-M': g2m_idx}
     if g2mi_fail:
         print(
-            "Warning: G2/M inhibition component missing (score=%f < %f)."
+            "Warning: G2-M inhibition component missing (score=%f < %f)."
             % (g2mi_score, thr)
         )
     else: 
         indices.append(g2mi_idx)
-        idx_dict['G2/M-'] = g2mi_idx
+        idx_dict['G2-M-'] = g2mi_idx
     if hist_fail:
         print(
             "Warning: Histone component missing (score=%f < %f)."
@@ -97,11 +97,11 @@ def find_cc_components(adata, thr=3, verbose=True):
     # -- Print if verbose
     if verbose:
         print("--- Selected components:",
-                "G1/S: %i (score=%f)" % (g1s_idx, g1s_score),
-                "G2/M: %i (score=%f)" % (g2m_idx, g2m_score), 
+                "G1-S: %i (score=%f)" % (g1s_idx, g1s_score),
+                "G2-M: %i (score=%f)" % (g2m_idx, g2m_score), 
                 sep ='\n')
         if not g2mi_fail:
-            print("G2/M-: %i (score=%f)" % (g2mi_idx, g2mi_score))
+            print("G2-M-: %i (score=%f)" % (g2mi_idx, g2mi_score))
         if not hist_fail:
             print("Histones: %i (score=%f)" % (histone_idx, histone_score))
             

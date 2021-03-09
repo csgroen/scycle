@@ -55,9 +55,9 @@ def enrich_components(adata, thr=3, verbose=True):
     histone_score = histone_scores[histone_idx]
 
     if verbose:
-        print("G1/S  score: %f" % g1s_score)
-        print("G2/M+ score: %f" % g2m_score)
-        print("G2/M- score: %f" % g2mi_score)
+        print("G1-S  score: %f" % g1s_score)
+        print("G2-M+ score: %f" % g2m_score)
+        print("G2-M- score: %f" % g2mi_score)
         print("HIST  score: %f" % histone_score)
 
     if g1s_score < thr or g2m_score < thr or histone_score < thr:
@@ -67,7 +67,7 @@ def enrich_components(adata, thr=3, verbose=True):
     g2mi_found = g2mi_score >= thr
     if not g2mi_found:
         print(
-            "Warning: only three cell-cycle signatures found (out of 4), G2/M inhibition missing (score=%f < %f)."
+            "Warning: only three cell-cycle signatures found (out of 4), G2-M inhibition missing (score=%f < %f)."
             % (g2mi_score, thr)
         )
 
@@ -76,17 +76,17 @@ def enrich_components(adata, thr=3, verbose=True):
         if g2mi_found:
             print(
                 "--- Selected components:",
-                "G1/S: %i (score=%f)" % (g1s_idx, g1s_score),
-                "G2/M: %i (score=%f)" % (g2m_idx, g2m_score),
-                "G2/M-: %i (score=%f)" % (g2mi_idx, g2mi_score),
+                "G1-S: %i (score=%f)" % (g1s_idx, g1s_score),
+                "G2-M: %i (score=%f)" % (g2m_idx, g2m_score),
+                "G2-M-: %i (score=%f)" % (g2mi_idx, g2mi_score),
                 "Histones: %i (score=%f)" % (histone_idx, histone_score),
                 sep="\n",
             )
         else:
             print(
                 "--- Selected components:",
-                "G1/S: %i (score=%f)" % (g1s_idx, g1s_score),
-                "G2/M: %i (score=%f)" % (g2m_idx, g2m_score),
+                "G1-S: %i (score=%f)" % (g1s_idx, g1s_score),
+                "G2-M: %i (score=%f)" % (g2m_idx, g2m_score),
                 "Histones: %i (score=%f)" % (histone_idx, histone_score),
                 sep="\n",
             )

@@ -76,25 +76,25 @@ def cell_cycle_components(adata, plot_type = 'panel', palette = 'Set1'):
     
     elif plot_type == 'panel':
         #-- Add variables for mapping plotting
-        if 'Histone' and 'G2/M-' in comps_found:
-            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
-            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
+        if 'Histone' and 'G2-M-' in comps_found:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1-S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2-M')
+            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2-M-')
             ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
             ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3, ic_trajm4])
         elif 'Histone' in comps_found:
-            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1-S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2-M')
             ic_trajm4 = _multi_ictrajm(ic_trajm, comps, 'Histone')
             ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm4])
-        elif 'G2/M-' in comps_found:
-            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
-            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2/M-')
+        elif 'G2-M-' in comps_found:
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1-S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2-M')
+            ic_trajm3 = _multi_ictrajm(ic_trajm, comps, 'G2-M-')
             ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2, ic_trajm3])
         else:
-            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1/S')
-            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2/M')
+            ic_trajm1 = _multi_ictrajm(ic_trajm, comps, 'G1-S')
+            ic_trajm2 = _multi_ictrajm(ic_trajm, comps, 'G2-M')
             ic_trajm4plot = pd.concat([ic_trajm1, ic_trajm2])
 
         #-- Get mapping colors

@@ -55,7 +55,7 @@ def cell_cycle_scores(
         colors = ["#66c2a5", "#fc8d62", "#8da0cb", "black"]
     elif scores == "components":
         _add_compScores(adata)
-        y = ["G1/S comp", "G2/M comp", "G2/M- comp", "Histone comp"]
+        y = ["G1-S comp", "G2-M comp", "G2-M- comp", "Histone comp"]
         colors = ["#66c2a5", "#fc8d62", "#8da0cb", "#e5c494", "black"]
 
     time_scatter = scatter_pseudotime(adata, y=y, size=size, alpha=alpha) + labs(
