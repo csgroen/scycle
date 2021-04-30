@@ -20,7 +20,6 @@ def integration(
     max_iter: int = 1e7,
     scale_src: float = 0.1,
     scale_ref: float = 0.1,
-    alpha_kde: float = 0.5,
     alpha_qp: float = 1.0,
 ):
     """
