@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-#import woti
+import woti
 
 from anndata import AnnData
 from sklearn.neighbors import NearestNeighbors
@@ -57,8 +57,8 @@ def integration(
         For WOTi only.
         Alpha parameter for quadratic program solver (OSQP), between 0 and 2
     """
-    assert algorithm in ("oti", "woti",), (
-        "Algorithm %s not recognized. Options: 'oti', 'woti'" % algorithm
+    assert algorithm in ("ot", "gw",), (
+        "Algorithm %s not recognized. Options: 'ot', 'gw'" % algorithm
     )
     assert (
         "dimRed" in _adata_ref.uns
@@ -115,16 +115,23 @@ def integration(
     # -- Update objects
     if verbose:
         print("> Performing optimal transport based integration using WOTi...")
-    if algorithm == "oti":
-        _adata_src.obsm["X_cc"] = woti.bot_transform(Xs, Xt, verbose=verbose)
-    elif algorithm == "woti":
-        _adata_src.obsm["X_cc"] = woti.wot_transform(
+    if algorithm == "ot":
+        _adata_src.obsm["X_cc"] = woti.ot_transform(
             Xs,
             Xt,
             max_iter=max_iter,
             scale=scale_src,
             scale_ref=scale_ref,
-            alpha_kde=alpha_kde,
+            alpha_qp=alpha_qp,
+            verbose=verbose,
+        )
+    elif algorithm == "gw":
+        _adata_src.obsm["X_cc"] = woti.gw_transform(
+            Xs,
+            Xt,
+            max_iter=max_iter,
+            scale=scale_src,
+            scale_ref=scale_ref,
             alpha_qp=alpha_qp,
             verbose=verbose,
         )
