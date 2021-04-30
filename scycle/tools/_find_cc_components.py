@@ -88,7 +88,7 @@ def find_cc_components(adata, thr=3, verbose=True):
     if hist_fail:
         print(
             "Warning: Histone component missing (score=%f < %f)."
-            % (histone_scores, thr)
+            % (histone_score, thr)
         )
     else: 
         indices.append(histone_idx)
