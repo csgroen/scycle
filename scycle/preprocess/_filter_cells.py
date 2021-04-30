@@ -7,12 +7,13 @@ from anndata import AnnData
 import gc
 
 
+
 def filter_cells(
     adata: AnnData,
     min_counts: int = -1,
     max_counts: int = -1,
     max_mt_ratio: int = 20,
-    doublet_detection: bool = True,
+    doublet_detection: bool = False,
     scrublet_kwargs: dict = {
         "total_counts": None,
         "sim_doublet_ratio": 2.0,
@@ -23,7 +24,7 @@ def filter_cells(
     },
     verbose=True,
 ):
-    """Pre-processes AnnData with cell pooling
+    """Filter problematic cells in an AnnData
 
     Parameters
     ----------
@@ -54,9 +55,9 @@ def filter_cells(
     """
 
     # -- sparse -> array
-    if "scipy.sparse" in str(type(adata.X)):
+    if 'ndarray' not in str(type(adata.X)):
         adata.X = adata.X.toarray()
-
+        
     # -- Mitochondrial content
     adata.var["mt"] = adata.var_names.str.startswith("MT-")
     sc.pp.calculate_qc_metrics(

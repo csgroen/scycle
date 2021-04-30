@@ -50,10 +50,16 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
     
     else:
         #-- Make multiple color plot
-        plt_vars = y
-        plt_vars.append('pseudotime')
-        sannot = adata.obs.copy()[plt_vars]
+        sannot = pd.DataFrame({'pseudotime': adata.obs['pseudotime']})
         sannot['id'] = range(sannot.shape[0])
+        
+        #-- Get y from obs or matrix:
+        for var in y:
+            if var in adata.obs.columns:
+                sannot[var] = adata.obs[var]
+            elif var in adata.var_names:
+                sannot[var] = adata[:,var].X.flatten()
+
             
         plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'], 
                             var_name = 'signature', value_name = 'score')

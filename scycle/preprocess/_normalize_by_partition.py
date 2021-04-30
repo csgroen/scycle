@@ -11,15 +11,15 @@ from ._prep_pooling import prep_pooling
 from ..tools import (
     dimensionality_reduction,
     find_cc_components,
-    trajectory,
-    pseudotime,
+    self_consistent_trajectory,
+    pseudotime
 )
 
 def normalize_by_partition(
     adata_src: AnnData, 
     adata_ref: AnnData = None, 
     rerun_pc: bool = False, 
-    n_ref_parts: int = 10,
+    n_ref_parts: int = 20,
     verbose: bool = True
 ):
 
@@ -61,11 +61,11 @@ def normalize_by_partition(
             print("Preprocessing reference with default values...")
             find_cc_components(adata_ref, verbose=False)
 
-    pc_didntrun = "trajectory" not in adata_ref.uns["scycle"].keys()
-    if pc_didntrun | rerun_pc:
+    sct_didntrun = 'self-consistent_trajectory' not in adata_ref.uns["scycle"].keys()
+    if sct_didntrun | rerun_pc:
         if verbose:
-            print("-- Running `tl.trajectory` with n_ref_parts...")
-        trajectory(adata_ref, n_nodes=n_ref_parts, verbose=False)
+            print("-- Running `tl.self_consistent_trajectory` with n_ref_parts...")
+        self_consistent_trajectory(adata_ref, n_nodes=n_ref_parts, verbose=False)
         pseudotime(adata_ref, scale = False, verbose = False)
 
     old_totals = adata_ref.obs["total_counts"]

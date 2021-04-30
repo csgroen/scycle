@@ -46,7 +46,6 @@ def find_cc_components(adata, thr=3, verbose=True):
         }
     
     #-- Get idx of max scores
-    
     g2m_idx = np.argmax(g2m_scores)
     g1s_scores[g2m_idx] = 0
     g2mi_scores[g2m_idx] = 0
@@ -107,15 +106,15 @@ def find_cc_components(adata, thr=3, verbose=True):
             
     #-- Get top components from scores
     xdr = adata.obsm["X_dimRed"][:, indices]
-    adata.obsm["X_cc"] = xdr
+    if len(indices) < 3:
+        xdr_s = PCA(n_components=2).fit_transform(xdr)
+    else:
+        xdr_s = PCA(n_components=3).fit_transform(xdr)
 
-    #-- PCA if n_comps > 3
-    if len(indices) > 3:
-        adata.obsm["X_pca_scycle"] = PCA(n_components=3).fit_transform(xdr)
-    elif len(indices) == 3:
-        adata.obsm["X_pca_scycle"] = xdr
-        
+    
     #-- Overwrite
+    adata.obsm["X_cc"] = xdr
+    adata.obsm["X_pca_scycle"] = xdr_s
     adata.uns["scycle"]["find_cc_components"] = {
         'scores': cc_scores,
         'indices': idx_dict

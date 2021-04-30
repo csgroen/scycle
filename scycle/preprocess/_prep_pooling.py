@@ -67,9 +67,9 @@ def prep_pooling(
     assert "float" in str(adata.X.dtype), "adata.X dtype must be float."
 
     # -- sparse -> array
-    if "scipy.sparse" in str(type(adata.X)):
+    if 'ndarray' not in str(type(adata.X)):
         adata.X = adata.X.toarray()
-    np.divide(adata.X, division_factor, out=adata.X)
+    # np.divide(adata.X, division_factor, out=adata.X)
 
     if len(adata.layers.keys()) == 0:  # keep "raw" data
         adata.layers["matrix"] = adata.X
@@ -161,9 +161,8 @@ def _smooth_matrix_by_pooling(matrix, indices):
 
 
 def _get_nd_array(arr):
-    x = None
-    if str(type(arr)):
-        x = arr
-    else:
+    if 'ndarray' not in str(type(arr)):
         x = arr.toarray()
+    else:
+        x = arr
     return x

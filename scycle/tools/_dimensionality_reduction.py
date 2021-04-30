@@ -28,8 +28,9 @@ def dimensionality_reduction(
         "Mu": 0.01,
         "r2_threshold": 0.5,
     },
-    find_cc_comps: bool = False,
-    verbose: bool = False,
+    find_cc_comps: bool = True,
+    find_cc_comp_thr: int = 3,
+    verbose: bool = True,
 ):
     """Dimensionality reduction for pseudotime computation
 
@@ -57,6 +58,8 @@ def dimensionality_reduction(
     find_cc_comps: bool
         If True and method='ica', components will be scored to find
         cell cycle-related components
+    find_cc_comp_thr: int
+      Score threshold for IC recognition. Passed to tl.find_cc_components
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -133,11 +136,13 @@ def dimensionality_reduction(
     }
     if method == "self_consistent_CC":
         adata.uns["scycle"].pop("find_cc_components")
+        adata.varm.pop('P_dimRed')
         del adata.obsm["X_cc"]
         adata.uns["scycle"]["dimRed"]["cc_genes"] = dimred_res["cc_genes"]
+        
 
     if method == "ica" and find_cc_comps:
-        find_cc_components(adata, verbose=verbose)
+        find_cc_components(adata, thr = find_cc_comp_thr, verbose=verbose)
 
     gc.collect()
 
@@ -146,7 +151,8 @@ def _adata_CCgenes(adata):
     # -- Select in matrix
     adata_cc = adata.copy()
     idx = [gene in adata_cc.var_names.tolist() for gene in cc_genes]
-    adata_cc = adata_cc[:, cc_genes[idx]]
+    genes2keep = np.array(cc_genes)[idx]
+    adata_cc = adata_cc[:, genes2keep]
     return adata_cc
 
 
@@ -191,7 +197,7 @@ def _dimRed_self_consistent_cc(
 ):
 
     if verbose:
-        print("Dimensionality reduction using self consistent trajectory...")
+        print("Dimensionality reduction using self consistent CC genes..")
         print("Initial estimation using ICA...")
 
     dimensionality_reduction(adata, method="ica", find_cc_comps=True, verbose=False)
@@ -230,17 +236,17 @@ def _dimRed_self_consistent_cc(
         if perc > 1 - eps_jaccard:
             break
         ind_old = ind.copy()
-
+        
+    print("Reducing dimensionality using self-consistent CC genes...")
     genes_cc_space = adata.var_names[ind]
     pca = PCA(n_components=n_comps).fit(adata.X[:, ind])
     X_dimRed = pca.transform(adata.X[:, ind])
 
-    adata.uns["scycle"]["cc_genes"] = genes_cc_space
     return {
         "obj": pca,
         "dimred": X_dimRed,
         "pMatrix": np.linalg.pinv(pca.components_),
-        "cc_genes": genes_cc_space,
+        "cc_genes": genes_cc_space.tolist(),
     }
 
 

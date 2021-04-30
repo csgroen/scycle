@@ -5,7 +5,6 @@ import pandas as pd
 import elpigraph
 from anndata import AnnData
 from sklearn.decomposition import PCA
-from ._find_cc_components import find_cc_components
 import warnings
 
 
@@ -33,6 +32,7 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     )
 
     n_dims = X_emb.shape[1]
+    
 
     egr = elpigraph.computeElasticPrincipalCircle(
         X_emb, NumNodes=n_nodes, verbose=verbose
@@ -69,8 +69,9 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
 
     edge_data = pd.DataFrame({"e1": e1, "e2": e2, "mean_counts": node_read_counts})
 
-    # -- Project in 3d
-    pca = PCA(n_components=3).fit(X_emb)
+    # -- Project in lower dimension
+    n_ldims = np.min([n_dims, 3])
+    pca = PCA(n_components=n_ldims).fit(X_emb)
     node3d = pd.DataFrame(pca.transform(node_coords.iloc[:, 0:n_dims]))
     node3d.columns = ["x", "y", "z"]
     node3d["npos"] = range(n_nodes)

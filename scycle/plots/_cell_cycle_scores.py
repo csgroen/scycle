@@ -52,13 +52,13 @@ def cell_cycle_scores(
     """
     if scores == "signatures":
         y = ["G1-S", "G2-M", "Histones"]
-        colors = ["#66c2a5", "#fc8d62", "#8da0cb", "black"]
+        colors = ['#8ca0c9', '#ff8d68', '#5cc2a6', "black"]
     elif scores == "components":
         _add_compScores(adata)
         y = ["G1-S comp", "G2-M comp", "G2-M- comp", "Histone comp"]
-        colors = ["#66c2a5", "#fc8d62", "#8da0cb", "#e5c494", "black"]
+        colors = ['#8ca0c9', '#ff8d68', "#e5c494", '#5cc2a6', "black"]
 
-    time_scatter = scatter_pseudotime(adata, y=y, size=size, alpha=alpha) + labs(
+    time_scatter = pseudotime_scatter(adata, y=y, size=size, alpha=alpha) + labs(
         x="Pseudotime", y="Signature scores", color="Signature"
     )
 
@@ -117,7 +117,8 @@ def cell_cycle_scores(
 
         return cell_cycle_plt
     else:
-        return time_scatter
+        return time_scatter + scale_color_manual(values=colors[0:-1])
+
 
 def _add_compScores(adata):
     ecom_idx = adata.uns['scycle']['find_cc_components']['indices']

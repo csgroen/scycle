@@ -3,3 +3,4 @@
 from . import preprocess as pp
 from . import tools as tl
 from . import plots as pl
+from . import data as data

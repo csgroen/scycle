@@ -16,7 +16,7 @@ def integration(
     _adata_ref: AnnData,
     components: list = [],
     algorithm: str = "woti",
-    verbose: bool = False,
+    verbose: bool = True,
     max_iter: int = 1e7,
     scale_src: float = 0.1,
     scale_ref: float = 0.1,
@@ -29,9 +29,9 @@ def integration(
 
     Parameters
     ----------
-    adata_src: AnnData
+    _adata_src: AnnData
         The dataset to align.
-    adata_target: AnnData
+    _adata_ref: AnnData
         The dataset to use as a reference.
     components: list
         ICs indices caring cell-cycle related information. Let
@@ -142,7 +142,7 @@ def integration(
         print("-- Done")
 
     # -- Update X_pca_scycle so that all datasets are expressed in the same {PC} subspace
-    pca = PCA(n_components=3, svd_solver="arpack")
+    pca = PCA(n_components=3)
     pca.fit(_adata_ref.obsm['X_cc'])
     _adata_src.obsm["X_pca_scycle"] = pca.transform(_adata_src.obsm['X_cc'])
 

@@ -11,7 +11,6 @@ from ..data import (
 from scipy.stats import zscore
 import gc
 
-
 def prep_simple(
     adata: AnnData,
     normalize_counts: bool = True,
@@ -54,7 +53,9 @@ def prep_simple(
     """
 
     assert division_factor != 0, "Null division factor. Terminating..."
-    np.divide(adata.X, division_factor, out=adata.X)
+    if 'ndarray' not in str(type(adata.X)):
+        adata.X = adata.X.toarray()
+    # np.divide(adata.X, division_factor, out=adata.X)
 
     if "total_counts" not in adata.obs.keys():
         adata.obs["total_counts"] = adata.X.sum(1)
