@@ -107,11 +107,15 @@ def find_cc_components(adata, thr=3, verbose=True):
             
     #-- Get top components from scores
     xdr = adata.obsm["X_dimRed"][:, indices]
-    xdr3d = PCA(n_components=3).fit_transform(xdr)
-    
-    #-- Overwrite
     adata.obsm["X_cc"] = xdr
-    adata.obsm["X_pca_scycle"] = xdr3d
+
+    #-- PCA if n_comps > 3
+    if len(indices) > 3:
+        adata.obsm["X_pca_scycle"] = PCA(n_components=3).fit_transform(xdr)
+    elif len(indices) == 3:
+        adata.obsm["X_pca_scycle"] = xdr
+        
+    #-- Overwrite
     adata.uns["scycle"]["find_cc_components"] = {
         'scores': cc_scores,
         'indices': idx_dict

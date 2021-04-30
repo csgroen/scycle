@@ -52,6 +52,8 @@ def cell_cycle_pca3d(adata,
         pio.renderers.default = 'browser'
     """
     #-- Get cell projection coordinates
+    assert 'X_pca_scycle' in adata.obsm, "3D PCA must be computed first."
+    
     x = adata.obsm['X_pca_scycle'][:,0]
     y = adata.obsm['X_pca_scycle'][:,1]
     z = adata.obsm['X_pca_scycle'][:,2]

@@ -28,8 +28,8 @@ def dimensionality_reduction(
         "Mu": 0.01,
         "r2_threshold": 0.5,
     },
-    find_cc_comps: bool = True,
-    verbose: bool = True,
+    find_cc_comps: bool = False,
+    verbose: bool = False,
 ):
     """Dimensionality reduction for pseudotime computation
 
