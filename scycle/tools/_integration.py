@@ -15,11 +15,13 @@ def integration(
     _adata_src: AnnData,
     _adata_ref: AnnData,
     components: list = [],
-    algorithm: str = "woti",
+    method: str = "ot",
+    entropy: bool = True,
+    hreg: float = 1e-3,
+    weighted: bool = False,
     verbose: bool = True,
     max_iter: int = 1e7,
-    scale_src: float = 0.1,
-    scale_ref: float = 0.1,
+    scale: float = 0.1,
     alpha_qp: float = 1.0,
 ):
     """
@@ -36,9 +38,14 @@ def integration(
     components: list
         ICs indices caring cell-cycle related information. Let
         it empty for automatic detection.
-    algorithm: str
-        Integration algorithm to use, in "oti" (optimal transport
-        integration) of "woti" (weighted optimal transport integration).
+    method: str
+        In "ot", "gromov". Histogram distance to use.
+    entropy: bool
+        Use the entropy regularized solver, turn on for larger problems
+    hreg: float
+        Entropy regularization constant
+    weighted:
+        False to use uniform weights, True to estimate them.
     verbose: bool
         Outputs information in standard output stream.
     max_iter: int
@@ -48,7 +55,7 @@ def integration(
         Kernel scaling of the source cloud point.
     scale_ref: float
         For WOTi only.
-        Kernel scaling of the reference cloud point.
+    
     alpha_kde: float
         For WOTi only.
         Alpha parameter for KDE bandwith selection, between 0 and 1.
@@ -56,8 +63,8 @@ def integration(
         For WOTi only.
         Alpha parameter for quadratic program solver (OSQP), between 0 and 2
     """
-    assert algorithm in ("ot", "gw",), (
-        "Algorithm %s not recognized. Options: 'ot', 'gw'" % algorithm
+    assert method in ("ot", "gromov"), (
+        "Method %s not recognized. Options: 'ot', 'gromov'" % method
     )
     assert (
         "dimRed" in _adata_ref.uns
@@ -114,27 +121,17 @@ def integration(
     # -- Update objects
     if verbose:
         print("> Performing optimal transport based integration using WOTi...")
-    if algorithm == "ot":
-        _adata_src.obsm["X_cc"] = woti.ot_transform(
-            Xs,
-            Xt,
-            max_iter=max_iter,
-            scale=scale_src,
-            scale_ref=scale_ref,
-            alpha_qp=alpha_qp,
-            verbose=verbose,
-        )
-    elif algorithm == "gw":
-        _adata_src.obsm["X_cc"] = woti.gw_transform(
-            Xs,
-            Xt,
-            max_iter=max_iter,
-            scale=scale_src,
-            scale_ref=scale_ref,
-            alpha_qp=alpha_qp,
-            verbose=verbose,
-        )
-
+    w = woti.Woti(
+        method=method,
+        max_iter=max_iter,
+        entropy=entropy,
+        hreg=hreg,
+        weighted=weighted,
+        alpha_qp=alpha_qp,
+        scale=scale,
+        verbose=verbose
+    )
+    _adata_src.obsm["X_cc"] = woti.transform(Xs, Xt)
     _adata_ref.obsm["X_cc"] = Xt
     _adata_src.obsm["X_dimRed"] = adata_src.obsm["X_dimRed"]
 
