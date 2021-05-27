@@ -7,6 +7,12 @@ from anndata import AnnData
 from sklearn.decomposition import PCA
 import warnings
 
+<<<<<<< HEAD
+=======
+import anndata
+adata = anndata.read_h5ad('/home/clarice/Desktop/test.h5ad')
+
+>>>>>>> master
 def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
     cell-cycle pseudotime
