@@ -9,3 +9,5 @@ from ._cc_markers import (
     histone_markers,
     cc_genes,
 )
+
+from ._get_data import get_data

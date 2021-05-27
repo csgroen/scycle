@@ -7,6 +7,8 @@ from anndata import AnnData
 from sklearn.decomposition import PCA
 import warnings
 
+import anndata
+adata = anndata.read_h5ad('/home/clarice/Desktop/test.h5ad')
 
 def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
@@ -30,9 +32,7 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     X_emb = (
         adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
     )
-
     n_dims = X_emb.shape[1]
-    
 
     egr = elpigraph.computeElasticPrincipalCircle(
         X_emb, NumNodes=n_nodes, verbose=verbose
@@ -72,11 +72,17 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     # -- Project in lower dimension
     n_ldims = np.min([n_dims, 3])
     pca = PCA(n_components=n_ldims).fit(X_emb)
-    node3d = pd.DataFrame(pca.transform(node_coords.iloc[:, 0:n_dims]))
-    node3d.columns = ["x", "y", "z"]
+    node3d = pd.DataFrame(pca.transform(node_coords.iloc[:, 0:n_ldims]))
+    edge3d = pd.DataFrame(pca.transform(edge_coords.iloc[:, 2 : (n_ldims + 2)]))
+
+    if n_ldims == 3:
+        node3d.columns = ["x", "y", "z"]
+        edge3d.columns = ["x", "y", "z"]
+    else:
+        node3d.columns = ['x', 'y']
+        edge3d.columns = ['x', 'y']
+
     node3d["npos"] = range(n_nodes)
-    edge3d = pd.DataFrame(pca.transform(edge_coords.iloc[:, 2 : (n_dims + 2)]))
-    edge3d.columns = ["x", "y", "z"]
     edge3d["eid"] = range(n_nodes + 1)
 
     node_coords = node_coords.merge(node3d, how="left", on="npos")
@@ -89,7 +95,6 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
         "edges": edge_data,
     }
     adata.uns["scycle"]["principal_circle"] = {"n_nodes": n_nodes}
-
 
 def _get_gr_coords(adata):
     # Get the node coordinates
@@ -147,4 +152,3 @@ def principal_circle(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """
     warnings.warn("principal_circle is deprecated; use trajectory", DeprecationWarning)
     return (trajectory(adata, n_nodes, verbose))
-

@@ -55,7 +55,7 @@ def integration(
         Kernel scaling of the source cloud point.
     scale_ref: float
         For WOTi only.
-    
+
     alpha_kde: float
         For WOTi only.
         Alpha parameter for KDE bandwith selection, between 0 and 1.
@@ -139,7 +139,8 @@ def integration(
         print("-- Done")
 
     # -- Update X_pca_scycle so that all datasets are expressed in the same {PC} subspace
-    pca = PCA(n_components=3)
+    nc = 3 if _adata_ref.obsm['X_cc'].shape[1] > 2 else 2
+    pca = PCA(n_components=nc)
     pca.fit(_adata_ref.obsm['X_cc'])
     _adata_src.obsm["X_pca_scycle"] = pca.transform(_adata_src.obsm['X_cc'])
 
