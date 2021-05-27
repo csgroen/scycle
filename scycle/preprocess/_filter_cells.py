@@ -6,8 +6,6 @@ import numpy as np
 from anndata import AnnData
 import gc
 
-
-
 def filter_cells(
     adata: AnnData,
     min_counts: int = -1,
@@ -57,7 +55,7 @@ def filter_cells(
     # -- sparse -> array
     if 'ndarray' not in str(type(adata.X)):
         adata.X = adata.X.toarray()
-        
+
     # -- Mitochondrial content
     adata.var["mt"] = adata.var_names.str.startswith("MT-")
     sc.pp.calculate_qc_metrics(

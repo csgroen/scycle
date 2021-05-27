@@ -15,3 +15,4 @@ from ._classify_cc_genes import classify_genes_by_ic
 from ._curvature import curvature
 from ._find_nonproliferating_cells import find_nonproliferating_cells
 from ._self_consistent_trajectory import self_consistent_trajectory
+from ._cell_cycle_genes import cell_cycle_genes

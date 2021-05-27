@@ -139,7 +139,7 @@ def dimensionality_reduction(
         adata.varm.pop('P_dimRed')
         del adata.obsm["X_cc"]
         adata.uns["scycle"]["dimRed"]["cc_genes"] = dimred_res["cc_genes"]
-        
+
 
     if method == "ica" and find_cc_comps:
         find_cc_components(adata, thr = find_cc_comp_thr, verbose=verbose)
@@ -236,7 +236,7 @@ def _dimRed_self_consistent_cc(
         if perc > 1 - eps_jaccard:
             break
         ind_old = ind.copy()
-        
+
     print("Reducing dimensionality using self-consistent CC genes...")
     genes_cc_space = adata.var_names[ind]
     pca = PCA(n_components=n_comps).fit(adata.X[:, ind])
