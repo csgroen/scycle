@@ -49,7 +49,7 @@ def prep_simple(
 
     Returns
     ----------
-    None
+    - `None`
     """
 
     assert division_factor != 0, "Null division factor. Terminating..."

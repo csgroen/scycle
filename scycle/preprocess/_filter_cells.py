@@ -24,32 +24,20 @@ def filter_cells(
 ):
     """Filter problematic cells in an AnnData
 
-    Parameters
-    ----------
-    adata: AnnData
-        The AnnData object to be pre-processed.
-    min_counts: int
-        Minimum number of counts required for a cell to pass filtering.
-        -1 -> median(counts) - std(counts)
-    max_counts: int
-        Maximum number of counts required for a cell to pass filtering.
-        -1 -> median(counts) + std(counts)
-    max_mt_ratio: int
-        Maximum proportion of mitochondrial genes in a cell to pass
-        filtering.
-    doublet_detection: bool
-        Uses doublet detection instead of max counts to remove doublets
-    scrublet_kwargs: dict
-        Arguments passed to Scrublet for doublet detection
+    Args:
+      adata(AnnData): The AnnData object to be pre-processed.
+      min_counts(int): Minimum number of counts required for a cell to pass filtering.
+      `-1` -> median(counts) - std(counts)
+      max_counts(int): Maximum number of counts required for a cell to pass filtering.
+      `-1` -> median(counts) + std(counts)
+      max_mt_ratio(int): Maximum proportion of mitochondrial genes in a cell to pass
+      filtering.
+      doublet_detection(bool): Uses doublet detection instead of max counts to remove doublets
+      scrublet_kwargs(dict): Arguments passed to Scrublet for doublet detection
+      verbose: (Default value = True)
 
-    Results
-    ----------
-    Cells not passing the quality control filters are removed from adata
-
-    Sets
-    ----------
-    uns['scrublet'] if doublet_detection = True
-    'pct_counts_mt', 'total_counts' in obs
+    Returns:
+    * Sets
     """
 
     # -- sparse -> array

@@ -1,6 +1,6 @@
 # scycle - Cell cycle analysis in single-cell RNA-seq
 
-![](scycle.png)
+![](docs/scycle.png)
 
 scycle uses the scanpy and anndata frameworks in Python and extends their
 functionality to calculate cell-cycle pseudotimes and assigns cell cycle phase

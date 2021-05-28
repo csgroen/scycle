@@ -69,8 +69,8 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     # -- Project in lower dimension
     n_ldims = np.min([n_dims, 3])
     pca = PCA(n_components=n_ldims).fit(X_emb)
-    node3d = pd.DataFrame(pca.transform(node_coords.iloc[:, 0:n_ldims]))
-    edge3d = pd.DataFrame(pca.transform(edge_coords.iloc[:, 2 : (n_ldims + 2)]))
+    node3d = pd.DataFrame(pca.transform(node_coords.iloc[:, 0:n_dims]))
+    edge3d = pd.DataFrame(pca.transform(edge_coords.iloc[:, 2 : (n_dims + 2)]))
 
     if n_ldims == 3:
         node3d.columns = ["x", "y", "z"]

@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
+from scycle import __version__
 
 setup(name='scycle',
-      version='0.1.14',
+      version= __version__,
       description='Cell cycle pseudotime in single-cell RNA-seq',
       url='http://github.com/csgroen/scycle',
       author=['Clarice Groeneveld', 'Andrei Zinovyev', 'Aziz Fouche'],

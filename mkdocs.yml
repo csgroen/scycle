@@ -1,0 +1,16 @@
+site_name: scycle
+nav:
+  - Home: index.md
+  - Basic pipeline: tutorials/basic_pipeline.ipynb
+  - Integration tutorial: tutorials/sc200_integration.ipynb
+theme:
+  name: readthedocs
+  logo: ..scycle.png
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - mkdocstrings
+
+extra_css:
+  - css/custom.css

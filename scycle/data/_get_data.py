@@ -8,7 +8,7 @@ import re
 #-- Data locations
 # sc200_CCLE ref = SCP542
 datasets = ['CHLA9, sc200_CCLE']
-url_chla9 = 'https://xfer.curie.fr/get/nil/zXRLaZtAPi8/CHLA9.loom'
+url_chla9 = 'http://xfer.curie.fr/get/nil/vBhkGqwx7hX/CHLA9.h5ad'
 url_sc200 = 'http://xfer.curie.fr/get/nil/8yt0mkg9OEF/sc200CL_pp.h5ad'
 
 #-- Main function
@@ -27,8 +27,8 @@ def get_data(dataset):
     #-- Check if cached, download otherwise
     #------ CHLA9
     if dataset == 'CHLA9':
-        fname = cache_dir + '/chla9.loom'
-        if 'chla9.loom' not in os.listdir(cache_dir):
+        fname = cache_dir + '/chla9.h5ad'
+        if 'chla9.h5ad' not in os.listdir(cache_dir):
             print('-- Downloading CHLA9 data from Xfer...')
             _download_scdata(url_chla9, fname)
             print('-- Download concluded.')
@@ -50,9 +50,6 @@ def get_data(dataset):
         print('Done.')
     elif len(re.findall('h5ad$', fname)) > 0:
         scdata = anndata.read_h5ad(fname)
-
-
-
 
     return scdata
 
