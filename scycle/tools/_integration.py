@@ -131,7 +131,7 @@ def integration(
         scale=scale,
         verbose=verbose
     )
-    _adata_src.obsm["X_cc"] = w.transform(Xs, Xt)
+    _adata_src.obsm["X_cc"] = w.fit_transform(Xs, Xt)
     _adata_ref.obsm["X_cc"] = Xt
     _adata_src.obsm["X_dimRed"] = adata_src.obsm["X_dimRed"]
 
