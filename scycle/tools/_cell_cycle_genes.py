@@ -4,12 +4,6 @@ import numpy as np
 import pandas as pd
 from ._subtract_cc import subtract_cc
 
-#-- test
-import anndata
-
-adata = anndata.read_h5ad('/home/clarice/Desktop/test.h5ad')
-#---
-
 def cell_cycle_genes(adata, r2_thrshold = 0.6):
     """Uses the cell cycle trajectory to shortlist cell cycle genes
 
