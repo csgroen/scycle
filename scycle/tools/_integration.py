@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import woti
+import transmorph as tr
 
 from anndata import AnnData
 from sklearn.neighbors import NearestNeighbors
@@ -51,16 +51,16 @@ def integration(
     max_iter: int
         Maximum number of iterations for the optimal transport plan computation.
     scale_src: float
-        For WOTi only.
+        For transmorph only.
         Kernel scaling of the source cloud point.
     scale_ref: float
-        For WOTi only.
+        For Transmorph only.
 
     alpha_kde: float
-        For WOTi only.
+        For Transmorph only.
         Alpha parameter for KDE bandwith selection, between 0 and 1.
     alpha_qp:
-        For WOTi only.
+        For Transmorph only.
         Alpha parameter for quadratic program solver (OSQP), between 0 and 2
     """
     assert method in ("ot", "gromov"), (
@@ -120,8 +120,8 @@ def integration(
 
     # -- Update objects
     if verbose:
-        print("> Performing optimal transport based integration using WOTi...")
-    w = woti.Woti(
+        print("> Performing optimal transport based integration using Transmorph...")
+    w = tr.Transmorph(
         method=method,
         max_iter=max_iter,
         entropy=entropy,

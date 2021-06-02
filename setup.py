@@ -20,7 +20,7 @@ setup(name='scycle',
           'POT',
           'scrublet',
           'sica @ git+https://github.com/ncaptier/Stabilized_ICA',
-          'WOTi @ git+https://github.com/Risitop/WOTi',
+          'transmorph',
       ],
       dependency_links=[],
       zip_safe=False)
