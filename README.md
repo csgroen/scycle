@@ -9,7 +9,7 @@ for each cell in a dataset.
 To install, use pip:
 
 ```
-pip install git+https://github.com/csgroen/scycle
+pip install git+https://github.com/csgroen/scycle.git#egg=scycle
 ```
 
 Initial tutorials are available [here](https://csgroen.github.io/scycle)
