@@ -1,8 +1,7 @@
 from setuptools import setup, find_packages
-from scycle import __version__
 
 setup(name='scycle',
-      version= __version__,
+      version= '0.1.14',
       description='Cell cycle pseudotime in single-cell RNA-seq',
       url='http://github.com/csgroen/scycle',
       author=['Clarice Groeneveld', 'Andrei Zinovyev', 'Aziz Fouche'],
@@ -11,6 +10,7 @@ setup(name='scycle',
       packages=find_packages(),
       install_requires =[
           'scanpy',
+          'elpigraph-python',
           'anndata',
           'pandas',
           'numpy',
@@ -19,7 +19,7 @@ setup(name='scycle',
           'typing',
           'POT',
           'scrublet',
-          'sica @ git+https://github.com/ncaptier/Stabilized_ICA',
+          'sica @ git+https://github.com/ncaptier/stabilized-ica',
           'transmorph',
       ],
       dependency_links=[],
