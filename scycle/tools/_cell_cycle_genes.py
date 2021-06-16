@@ -24,12 +24,12 @@ def cell_cycle_genes(adata, r2_thrshold = 0.6):
     assert 'egr' in adata.uns, "Pseudotime must be computed first."
 
     Xtemp = adata.X
-    cc.tl.subtract_cc(adata)
+    subtract_cc(adata)
     adata.X = Xtemp
     r2scores = adata.var['r2_scores']
 
     r2_filtered = r2scores[r2scores > 0.5].sort_values(ascending = False)
-    r2_df = pd.DataFrame({'genes': r2_filt.index.tolist(), 'r2_cc_trajectory': r2_filt})
+    r2_df = pd.DataFrame({'genes': r2_filtered.index.tolist(), 'r2_cc_trajectory': r2_filtered})
 
     return(r2_df)
 
