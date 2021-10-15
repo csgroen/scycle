@@ -12,17 +12,20 @@ from ._find_cc_components import find_cc_components
 
 
 def integration(
-    _adata_src: AnnData,
-    _adata_ref: AnnData,
-    components: list = [],
-    method: str = "ot",
-    entropy: bool = True,
-    hreg: float = 1e-3,
-    weighted: bool = False,
-    verbose: bool = True,
-    max_iter: int = 1e7,
-    scale: float = 0.1,
-    alpha_qp: float = 1.0,
+        _adata_src: AnnData,
+        _adata_ref: AnnData,
+        components: list = [],
+        method: str = "ot",
+        entropy: bool = False,
+        hreg: float = 1e-3,
+        unbalanced: bool = False,
+        mreg: float = 1e-2,
+        weighting_strategy: str = "uniform",
+        downsampling: bool = False,
+        normalize: bool = True,
+        jitter_std: float = .02,
+        verbose: bool = False,
+        max_iter: int = 1e7,
 ):
     """
     Optimal transport-based data integration. Data dimensionality must have been reduced
@@ -35,33 +38,35 @@ def integration(
         The dataset to align.
     _adata_ref: AnnData
         The dataset to use as a reference.
-    components: list
+    components: list<int>
         ICs indices caring cell-cycle related information. Let
         it empty for automatic detection.
     method: str
         In "ot", "gromov". Histogram distance to use.
     entropy: bool
-        Use the entropy regularized solver, turn on for larger problems
+        Use the entropy regularized solver, turn it on for larger problems
     hreg: float
-        Entropy regularization constant
-    weighted:
-        False to use uniform weights, True to estimate them.
+        Entropy regularization constant, to tune when entropy=True
+    unbalanced: bool
+        Use unbalanced optimal transport formulation. Helps for problems
+        with unbalanced cell types between datasets.
+    mreg: float
+        Marginal penalty, to tune if unbalanced=True
+    weighting_strategy: str
+        in "uniform" (default), "woti". How to choose weights before optimal
+        transport. In case of severely unbalanced dataset in terms of cell
+        phases, try "woti".
+    downsampling: bool
+        Turn it on for large datasets, at a cost of an approximate solution.
+    normalize: bool
+        Use column-normalized datasets for the integration. Helps when there
+        are strong differences between features.
+    jitter_std: float
+        Quantity of jittering to apply after integration.
     verbose: bool
         Outputs information in standard output stream.
     max_iter: int
         Maximum number of iterations for the optimal transport plan computation.
-    scale_src: float
-        For transmorph only.
-        Kernel scaling of the source cloud point.
-    scale_ref: float
-        For Transmorph only.
-
-    alpha_kde: float
-        For Transmorph only.
-        Alpha parameter for KDE bandwith selection, between 0 and 1.
-    alpha_qp:
-        For Transmorph only.
-        Alpha parameter for quadratic program solver (OSQP), between 0 and 2
     """
     assert method in ("ot", "gromov"), (
         "Method %s not recognized. Options: 'ot', 'gromov'" % method
@@ -123,15 +128,18 @@ def integration(
         print("> Performing optimal transport based integration using Transmorph...")
     w = tr.Transmorph(
         method=method,
-        max_iter=max_iter,
         entropy=entropy,
         hreg=hreg,
-        weighted=weighted,
-        alpha_qp=alpha_qp,
-        scale=scale,
-        verbose=verbose
+        unbalanced=unbalanced,
+        mreg=mreg,
+        normalize=normalize,
+        metric="sqeuclidean",
+        n_hops=downsampling,  # slight abuse bool -> int
+        weighting_strategy=weighting_strategy,
+        max_iter=max_iter,
+        verbose=(2 if verbose else 0)
     )
-    _adata_src.obsm["X_cc"] = w.fit_transform(Xs, Xt)
+    _adata_src.obsm["X_cc"] = w.fit_transform(Xs, Xt, jitter_std=jitter_std)
     _adata_ref.obsm["X_cc"] = Xt
     _adata_src.obsm["X_dimRed"] = adata_src.obsm["X_dimRed"]
 
