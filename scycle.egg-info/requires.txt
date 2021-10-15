@@ -1,0 +1,13 @@
+scanpy
+elpigraph-python
+anndata
+pandas
+numpy
+matplotlib
+plotnine
+plotly
+typing
+scrublet
+requests
+stabilized-ica@ git+https://github.com/ncaptier/stabilized-ica
+transmorph
