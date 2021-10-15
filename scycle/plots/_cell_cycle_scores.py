@@ -85,15 +85,15 @@ def cell_cycle_scores(
                 starts=[
                     None,
                     cc_divs["s_start"],
-                    cc_divs["g2_start"],
-                    cc_divs["m_start"],
+                    cc_divs["g2m_start"],
+                    # cc_divs["m_start"],
                 ],
-                labels=["G1", "S", "G2", "M"],
+                labels=["G1", "S", "G2-M"],
                 labpos=[
                     np.mean([0, cc_divs["s_start"]]),
-                    np.mean([cc_divs["s_start"], cc_divs["g2_start"]]),
-                    np.mean([cc_divs["g2_start"], cc_divs["m_start"]]),
-                    np.mean([cc_divs["m_start"], 1]),
+                    np.mean([cc_divs["s_start"], cc_divs["g2m_start"]]),
+                    np.mean([cc_divs["g2m_start"], 1]),
+                    # np.mean([cc_divs["m_start"], 1]),
                 ],
                 y=lab_ypos,
             )
@@ -137,5 +137,3 @@ def scatter_cell_cycle(
     """
     warnings.warn("scatter_cell_cycle is deprecated; use cell_cycle_scores", DeprecationWarning)
     return (cell_cycle_scores(adata, scores, size, alpha, curvature_shrink, lab_ypos))
-
-

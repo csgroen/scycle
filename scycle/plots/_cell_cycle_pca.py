@@ -12,6 +12,63 @@ from plotnine import (
 )
 from ._themes import theme_std
 
+def cell_cycle_projection(
+    adata,
+    col_var='total_counts',
+    shape_var=None,
+    palette='viridis',
+    size=1.5,
+    alpha=0.7,
+    trajectory=False,
+    node_size=7,
+    node_color='lightgrey',
+    show_nid=True
+):
+    """Plots the 2-D projection of the cells in the G1-S and G2-M dimensions.
+
+    Parameters
+    -------------
+    adata: AnnData
+        The AnnData object being used for the analysis. Must be previously
+        evaluated by `tl.dimensionality_reduction`
+    col_var: str
+        The variable to be used to color the points. Must be present in adata.obs
+    shape_var: str
+        The variable to be mapped to the shape of the points. Must be present in adata.obs
+    palette: str
+        A `cmap` palette to be used for coloring the scatterplot.
+    size: float
+        Controls the size of the points of the scatterplot.
+    alpha: float
+        Controls the transparency of the points of the scatterplot.
+        [0 = completly transparent, 1 = completly opaque]
+
+    Returns
+    --------------
+    A plotnine scatter plot of the 2-D projection of all cells.
+    """
+    ax_names = ['G1/S', 'G2/M']
+
+    plot_data = adata.obs[['G1-S', 'G2-M']]
+    plot_data[col_var] = adata.obs[col_var].values
+
+    if shape_var is None:
+        proj_plot = (
+            ggplot(plot_data, aes("G1-S", "G2-M"))
+            + geom_point(aes(color=col_var), size=size, alpha=alpha)
+            + theme_std
+            + labs(x=ax_names[0], y=ax_names[1])
+        )
+    else:
+        plot_data[shape_var] = adata.obs[shape_var].values
+        proj_plot = (
+            ggplot(plot_data, aes("G1-S", "G2-M"))
+            + geom_point(aes(color=col_var, shape=shape_var), size=size, alpha=alpha)
+            + theme_std
+            + labs(x=ax_names[0], y=ax_names[1])
+        )
+        return proj_plot
+
 def cell_cycle_pca(
     adata,
     col_var="total_counts",

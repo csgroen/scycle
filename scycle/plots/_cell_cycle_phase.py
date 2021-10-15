@@ -7,25 +7,25 @@ import warnings
 
 def cell_cycle_phase_barplot(adata, palette='Set2'):
     """Plots the proportion of cells in each phase of the cell cycle
-    
+
     See also: cell_cycle_phase_pieplot for the matplotlib pie chart
 
-    
+
     Parameters
     -----------
     adata: AnnData
         The AnnData object being used for the analysis. Must be previously
         evaluated by `tl.annotate_cell_cycle`.
-    
+
     Returns
     -----------
     A plotnine barplot with the total counts of cell in each phase of the
     cell cycle.
-    
+
     """
     plt_data = adata.obs.copy()
-    plt_data['cell_cycle_phase'] = pd.Categorical(plt_data['cell_cycle_phase'], categories = ['M', 'G2', 'S', 'G1'])
-    
+    plt_data['cell_cycle_phase'] = pd.Categorical(plt_data['cell_cycle_phase'], categories = ['G2-M', 'S', 'G1'])
+
     cycle_plot = (ggplot(plt_data, aes('cell_cycle_phase', fill = 'cell_cycle_phase'))
     + geom_bar()
     + coord_flip()
@@ -38,14 +38,14 @@ def cell_cycle_phase_barplot(adata, palette='Set2'):
             panel_grid_minor_x = element_line(size = 1.5))
     + scale_fill_brewer(type='qual', palette=palette)
     )
-    
+
     return cycle_plot
 
 def cell_cycle_phase_pieplot(adata, colors = ['#e78ac3', '#8da0cb', '#fc8d62', '#66c2a5']):
     """Plots the proportion of cells in each phase of the cell cycle
-    
+
     See also: cell_cycle_phase_barplot for the plotnine barplot
-    
+
     Parameters
     -----------
     adata: AnnData
@@ -54,7 +54,7 @@ def cell_cycle_phase_pieplot(adata, colors = ['#e78ac3', '#8da0cb', '#fc8d62', '
     colors: list of length 4
         A list of 4 colors to be used for the pie-chart for G1, S, G2 and M
         phase, respectively.
-    
+
     Returns
     -----------
     A matplotlib pieplot of the proportion of cells in each phase of the
@@ -65,7 +65,7 @@ def cell_cycle_phase_pieplot(adata, colors = ['#e78ac3', '#8da0cb', '#fc8d62', '
     cell_counts = cell_counts.iloc[::-1]
     pie, ax = plt.subplots(figsize=[10,6])
     labels = cell_counts.keys()
-    return (plt.pie(x=cell_counts, autopct="%.1f%%", explode=[0.05]*4, 
+    return (plt.pie(x=cell_counts, autopct="%.1f%%", explode=[0.05]*3,
                     labels=labels, colors = colors, pctdistance=0.5))
 
 def barplot_cycle_phase(adata):

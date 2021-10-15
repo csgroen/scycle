@@ -6,12 +6,12 @@ import numpy as np
 import elpigraph
 from anndata import AnnData
 
-def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None, 
-                cycle_direction: Optional[int]=None, 
+def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
+                cycle_direction: Optional[int]=None,
                 verbose = True):
     """ Remap principal circle nodes so that it starts at the moment of
     cell division
-    
+
     Parameters
     -------------
     adata: AnnData
@@ -27,7 +27,7 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
         direction calculated by `tl.celldiv_moment` will be used.
     verbose: bool
         If True, the function will print messages.
-        
+
     Returns
     ------------
     The principal circle coordinates will be updated so that the first node
@@ -41,45 +41,45 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
     X_emb = adata.obsm['X_cc'] if 'X_cc' in adata.obsm.keys() else adata.obsm['X_dimRed']
     n_dims = X_emb.shape[1]
     n_nodes = len(node_coords)
-    
+
     #-- Get cell div edge/cycle direction
     if celldiv_edge == None:
         div_edge = adata.uns['scycle']['cell_div_moment']['cell_div_edge']
     else:
         div_edge = celldiv_edge
-        
+
     if cycle_direction == None:
         cdir = adata.uns['scycle']['cell_div_moment']['cell_cycle_direction']
     else:
         cdir = cycle_direction
-    
+
     #-- Remapping edges and nodes
     if verbose: print('Remapping edges using', div_edge, '...')
-        
+
     #-- Get remapping positions
     if cdir > 0:
-        start = div_edge[1]
+        start = div_edge[0]
         remap_vec = np.array(range(start, n_nodes+start))
         idx = remap_vec >= n_nodes
         remap_vec[idx] = remap_vec[idx] - n_nodes
-        
+
     else:
         start = div_edge[0]
         remap_vec = [start - el if el <= start else (n_nodes + start) - el for el in range(n_nodes)]
         # remap_edgec = [start - el if el <= start else (n_nodes + start) - el for el in range(n_nodes+1)]
-         
-    node_coords = _remap_node_coords(node_coords, remap_vec, n_nodes)
+
+    node_coords = _remap_node_coords(node_coords, remap_vec, n_nodes).reset_index(drop=True)
     node_p = np.array(node_coords.iloc[:,0:n_dims])
     # edge_coords = _remap_edge_coords(edge_coords, remap_edgec)
-    edges = _remap_edges(edges, remap_vec)
+    edges = _remap_edges(edges, remap_vec).reset_index(drop=True)
     edge_tree = np.array(edges.iloc[1:(n_nodes),0:2])
-    partition, dists = elpigraph.src.core.PartitionData(X = X_emb, 
-                                                        NodePositions = node_p, 
-                                                        MaxBlockSize = 100000000, 
+    partition, dists = elpigraph.src.core.PartitionData(X = X_emb,
+                                                        NodePositions = node_p,
+                                                        MaxBlockSize = 100000000,
                                                         TrimmingRadius = np.inf,
                                                         SquaredX = np.sum(X_emb**2,axis=1,keepdims=1))
 
-    adata.uns['princirc_gr'] = {'node_coords': node_coords, 'edge_coords': edge_coords, 
+    adata.uns['princirc_gr'] = {'node_coords': node_coords, 'edge_coords': edge_coords,
                                 'edges': edges, 'edge_tree': edge_tree}
     adata.uns['scycle']['cell_div_moment']['cell_div_edge'] = [0,1]
     adata.uns['scycle']['cell_div_moment']['cell_cycle_direction'] = 1
@@ -100,5 +100,5 @@ def _remap_edges(edges, remap_vec):
     #-- Update e2
     e2 = [i for i in range(1, len(remap_vec))]; e2.append(0)
     edges_new['e2'] = e2
-    
+
     return edges_new

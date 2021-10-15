@@ -17,16 +17,22 @@ def cell_division(adata):
     Returns
     ------------
     A plotnine line-plot to help visualize the moment of cell division and
-    direction of the cell cycle. The moment of cell division is defined by the
-    largest drop in total_counts. The changes in counts are represented by the
+    direction of the cell cycle.
+
+    If method = 'counts' when tl.celldiv_moment was run,
+    cell division is defined by the largest drop in total_counts. The changes in
+    counts are represented by the
     bars at the bottom, and the suggested moment of cell division is marked in
     red. The cell cycle should follow an incremental increase in total counts
     until around the moment of cell division.
+
+    Alternatively, if method='g2m' in tl.celldiv_moment, the G2-M signature
+    dynamics are used to define the moment of cell division.
     """
+    ref_var = adata.uns['scycle']['cell_div_moment']['ref_var']
     edge_to_0 = adata.uns['scycle']['cell_div_moment']['cell_div_edge'][0]
     edges = adata.uns['princirc_gr']['edges']
     edges['cell_div'] = edges['e1'] == edge_to_0
-    ref_var = adata.uns['scycle']['cell_div_moment']['ref_var']
 
     cell_div_count = edges[edges['e1'] == edge_to_0]['mean_var']
 

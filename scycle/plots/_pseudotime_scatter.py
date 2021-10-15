@@ -24,7 +24,7 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
     color: str
         A supported color name. Controls the point color if type(y)==str.
         Ignored otherwise.
-        
+
     Returns
     -------------
     A plotnine scatter plot of pseudotime.
@@ -35,7 +35,7 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
             plot_df = pd.DataFrame({'x': adata.obs['pseudotime'], 'y': adata.obs[y]})
         elif y in adata.var_names:
             plot_df = pd.DataFrame({'x': adata.obs['pseudotime'], 'y': adata[:,y].X.flatten()})
-        
+
         #-- Make plot
         if color in adata.obs.columns:
             time_scatter = (ggplot(plot_df, aes(x = 'x', y = 'y'))
@@ -47,12 +47,12 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
               + geom_point(size = size, alpha = alpha, color = color)
               + labs(x = 'Pseudotime', y = y)
               + theme_std)
-    
+
     else:
         #-- Make multiple color plot
         sannot = pd.DataFrame({'pseudotime': adata.obs['pseudotime']})
         sannot['id'] = range(sannot.shape[0])
-        
+
         #-- Get y from obs or matrix:
         for var in y:
             if var in adata.obs.columns:
@@ -60,10 +60,10 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
             elif var in adata.var_names:
                 sannot[var] = adata[:,var].X.flatten()
 
-            
-        plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'], 
+
+        plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'],
                             var_name = 'signature', value_name = 'score')
-    
+
         time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
          + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
          + theme_std)
@@ -71,7 +71,7 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
     return time_scatter
 
 def scatter_pseudotime(adata, y, size = 1.5, alpha = 1, color = 'black'):
-    """DEPRECATED: use pseudotimecell_division
+    """DEPRECATED: use pseudotime_scatter
     """
     warnings.warn("scatter_pseudotime is deprecated; use pseudotime_scatter", DeprecationWarning)
     return (pseudotime_scatter(adata))

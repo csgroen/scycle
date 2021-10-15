@@ -7,10 +7,10 @@ from ._curvature import curvature
 from ._annotate_cell_cycle import annotate_cell_cycle
 
 
-def cell_cycle_phase(adata, 
-                     smoothing_factor=10, 
-                     transition_refs = [0.35, 0.65, 0.95], 
-                     max_refdist = 0.2, 
+def cell_cycle_phase(adata,
+                     smoothing_factor=10,
+                     transition_refs = [0.35, 0.65],
+                     max_refdist = 0.2,
                      annotate = True,
                      verbose = True):
     """Estimates the phase of cell cycle for each cell based on the curvature
@@ -56,14 +56,15 @@ def cell_cycle_phase(adata,
     peak_times = peaks / nnodes
 
     # -- Check ref_times
-    if len(transition_refs) != 3:
-        raise Exception("`transition_refs` must be a list of length 3")
-        
+    if len(transition_refs) != 2:
+        raise Exception("`transition_refs` must be a list of length 2")
+
     #-- Get peaks closest to transition_refs
-    sref_time, g2ref_time, mref_time = transition_refs
+    sref_time, g2ref_time = transition_refs
+    # sref_time, g2ref_time, mref_time = transition_refs
     s_start = _transition_time(sref_time, peak_times, max_refdist)
-    g2_start = _transition_time(g2ref_time, peak_times, max_refdist)
-    m_start = _transition_time(mref_time, peak_times, max_refdist)
+    g2m_start = _transition_time(g2ref_time, peak_times, max_refdist)
+    # m_start = _transition_time(mref_time, peak_times, max_refdist)
 
     # -- Save curvature info
     curv_data = pd.DataFrame(dict(x=x, pseudotime=x / nnodes, curvature=curv)).merge(
@@ -74,18 +75,19 @@ def cell_cycle_phase(adata,
     if verbose:
         print("-- Suggested cell cycle division:")
         print("G1:", " 0  ", "-", s_start)
-        print("S: ", s_start, "-", g2_start)
-        print("G2:", g2_start, "-", m_start)
-        print("M: ", m_start, "-   1")
+        print("S: ", s_start, "-", g2m_start)
+        print("G2-M:", g2m_start, "-", 1)
+        # print("G2-M:", g2m_start, "-", m_start)
+        # print("M: ", m_start, "-   1")
 
     # -- Return
     adata.uns["scycle"]["cell_cycle_division"] = {
         "s_start": s_start,
-        "g2_start": g2_start,
-        "m_start": m_start,
+        "g2m_start": g2m_start,
+        # "m_start": m_start,
         "curvature": curv_data,
     }
-    
+
     if annotate:
         annotate_cell_cycle(adata)
 

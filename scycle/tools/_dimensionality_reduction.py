@@ -40,8 +40,8 @@ def dimensionality_reduction(
         AnnData object for the analysis. Must be previously evaluated by
         pp.prep_simple or pp.prep_pooling.
     method: str
-        Method of dimensionality reduction, currently one of: 'pca', 'ica',
-        'pcaCCgenes','icaCCgenes','self_consistent_CC'.
+        Method of dimensionality reduction, currently one of: 'cc_signatures', 'pca', 'ica',
+        'pcaCCgenes','self_consistent_CC'.
         The 'self_consistent_pcaCC' find the self-consistent cell cycle space based on an
         initial estimation using ICA and finding the cell cycle ICs, and
         then using the trajectory to find the genes that are most informative
@@ -76,7 +76,6 @@ def dimensionality_reduction(
                 + "or `pp.prep_simple`, before dimensionality reduction"
             )
         )
-
     if method in ["pcaCCgenes", "icaCCgenes"]:
         adata_cc = _adata_CCgenes(adata)
         genes = np.array(adata_cc.var.index)
@@ -85,16 +84,18 @@ def dimensionality_reduction(
 
     if method == "pca":
         dimred_res = _dimRed_pca(adata, n_comps=n_comps, verbose=verbose)
+    elif method == "cc_signatures":
+        dimred_res = _dimRed_ccsigs(adata, verbose=verbose)
     elif method == "ica":
         dimred_res = _dimRed_ica(
             adata, n_comps=n_comps, max_iter=max_iter, seed=seed, verbose=verbose
         )
     elif method == "pcaCCgenes":
         dimred_res = _dimRed_pca(adata_cc, n_comps=n_comps, verbose=verbose)
-    elif method == "icaCCgenes":
-        dimred_res = _dimRed_ica(
-            adata_cc, max_iter=max_iter, seed=seed, n_comps=n_comps, verbose=verbose
-        )
+    # elif method == "icaCCgenes":
+    #     dimred_res = _dimRed_ica(
+    #         adata_cc, max_iter=max_iter, seed=seed, n_comps=n_comps, verbose=verbose
+    #     )
     elif method == "self_consistent_CC":
         dimred_res = _dimRed_self_consistent_cc(
             adata,
@@ -117,29 +118,32 @@ def dimensionality_reduction(
     X_dimRed = dimred_res["dimred"]
     adata.obsm["X_dimRed"] = X_dimRed
     adata.uns["dimRed"] = dimred_res["obj"]
-    if method in ["ica", "pca"]:
-        adata.varm["P_dimRed"] = dimred_res["pMatrix"]
-    else:
-        adata.uns["P_dimRed"] = dimred_res["pMatrix"]
 
     # -- 3D
-    pca_dimRed = PCA(n_components=3)
-    pca_dimRed.fit(X_dimRed)
+    if method == 'cc_signatures':
+        adata.obsm["X_pca_scycle"] = adata.obs[['G1-S', 'G2-M']]
+        adata.uns["scycle"]["dimRed"] = {"method": method}
+    else:
+        if method in ["ica", "pca"]:
+            adata.varm["P_dimRed"] = dimred_res["pMatrix"]
+        else:
+            adata.uns["P_dimRed"] = dimred_res["pMatrix"]
 
-    adata.obsm["X_pca_scycle"] = pca_dimRed.transform(X_dimRed)
+        pca_dimRed = PCA(n_components=3)
+        pca_dimRed.fit(X_dimRed)
+        adata.obsm["X_pca_scycle"] = pca_dimRed.transform(X_dimRed)
 
-    adata.uns["scycle"]["dimRed"] = {
-        "method": method,
-        "features": genes,
-        "n_comps": n_comps,
-        "seed": seed,
-    }
+        adata.uns["scycle"]["dimRed"] = {
+            "method": method,
+            "features": genes,
+            "n_comps": n_comps,
+            "seed": seed,
+        }
     if method == "self_consistent_CC":
         adata.uns["scycle"].pop("find_cc_components")
         adata.varm.pop('P_dimRed')
         del adata.obsm["X_cc"]
         adata.uns["scycle"]["dimRed"]["cc_genes"] = dimred_res["cc_genes"]
-
 
     if method == "ica" and find_cc_comps:
         find_cc_components(adata, thr = find_cc_comp_thr, verbose=verbose)
@@ -179,6 +183,13 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
     dimred = X @ S_pi
     del X
     return {"obj": sICA, "dimred": dimred, "pMatrix": S_pi}
+
+
+def _dimRed_ccsigs(adata, verbose=False):
+    if verbose:
+        print("-- Dimensionality reduction using G1-S and G2-M signatures...")
+    dimred = adata.obs[['G1-S', 'G2-M']]
+    return {"obj": None, "dimred": dimred}
 
 
 def _dimRed_decomp(adata, decomp, feats, ccomps):

@@ -2,7 +2,7 @@
 from plotnine import theme_light, theme, element_blank
 
 
-from ._cell_cycle_pca import cell_cycle_pca, scatter_projection
+from ._cell_cycle_pca import cell_cycle_pca, scatter_projection, cell_cycle_projection
 from ._cell_cycle_pca3d import cell_cycle_pca3d, scatter_projection3d
 from ._cell_division import lineplot_celldiv_moment, cell_division
 from ._cell_cycle_phase import cell_cycle_phase_barplot, cell_cycle_phase_pieplot, barplot_cycle_phase
