@@ -57,7 +57,7 @@ def cell_division (adata: AnnData,
     dirvar_edge = edges.iloc[edge_to_max][['e1', 'e2']].values.astype(int)
 
     coef = _edgeRegCoefficient(edges, var = 'mean_dirvar',
-    start_edge = dirvar_edge[1], end_edge = dirvar_edge[0])
+            start_edge = dirvar_edge[1], end_edge = dirvar_edge[0])
     direction = 1 if (coef > 0) else -1
 
     if var == 'G2-M':
@@ -92,6 +92,7 @@ def cell_division (adata: AnnData,
     if remap:
         remap_nodes(adata, verbose = verbose)
 
+
 def _edgeRegCoefficient(edges, var = 'mean_counts', start_edge = 0, end_edge = None):
     nedge = edges.shape[0]
     x = np.array([float(i) for i in range(nedge)])
@@ -105,6 +106,7 @@ def _edgeRegCoefficient(edges, var = 'mean_counts', start_edge = 0, end_edge = N
     na_idx = ~np.isnan(y)
     x = x[na_idx]
     y = np.array(y)[na_idx]
+    nedge = len(y)
     model = LinearRegression().fit(x.reshape(nedge,-1),y)
 
     return model.coef_[0]

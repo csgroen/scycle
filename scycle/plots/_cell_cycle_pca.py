@@ -67,7 +67,7 @@ def cell_cycle_projection(
             + theme_std
             + labs(x=ax_names[0], y=ax_names[1])
         )
-        return proj_plot
+    return proj_plot
 
 def cell_cycle_pca(
     adata,
@@ -121,7 +121,7 @@ def cell_cycle_pca(
     # Set axes names
     dimRed_method = adata.uns["scycle"]["dimRed"]["method"]
 
-    if dimRed_method == "CCgenes":
+    if dimRed_method == "cc_signatures":
         ax_names = ["G1-S", "G2-M"]
     else:
         ax_names = ["PC 1", "PC 2"]

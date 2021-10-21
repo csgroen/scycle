@@ -111,7 +111,7 @@ def dimensionality_reduction(
         raise Exception(
             (
                 "Not one of the supported methods.\n"
-                + "Must be one of: pca, ica, pcaCCgenes, icaCCgenes or self_consistent_CC"
+                + "Must be one of: pca, ica, cc_signatures, pcaCCgenes, icaCCgenes or self_consistent_CC"
             )
         )
 
@@ -121,7 +121,7 @@ def dimensionality_reduction(
 
     # -- 3D
     if method == 'cc_signatures':
-        adata.obsm["X_pca_scycle"] = adata.obs[['G1-S', 'G2-M']]
+        adata.obsm["X_pca_scycle"] = np.array(adata.obs[['G1-S', 'G2-M']])
         adata.uns["scycle"]["dimRed"] = {"method": method}
     else:
         if method in ["ica", "pca"]:
@@ -188,7 +188,7 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
 def _dimRed_ccsigs(adata, verbose=False):
     if verbose:
         print("-- Dimensionality reduction using G1-S and G2-M signatures...")
-    dimred = adata.obs[['G1-S', 'G2-M']]
+    dimred = np.array(adata.obs[['G1-S', 'G2-M']])
     return {"obj": None, "dimred": dimred}
 
 

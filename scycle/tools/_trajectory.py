@@ -30,6 +30,7 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
         adata.obsm["X_cc"] if "X_cc" in adata.obsm.keys() else adata.obsm["X_dimRed"]
     )
     n_dims = X_emb.shape[1]
+    X_emb = np.array(X_emb)
 
     egr = elpigraph.computeElasticPrincipalCircle(
         X_emb, NumNodes=n_nodes, verbose=verbose
