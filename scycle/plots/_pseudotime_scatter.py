@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-from plotnine import ggplot, aes, geom_point, labs, facet_wrap
+from plotnine import ggplot, aes, geom_point, labs, facet_wrap, geom_vline, geom_text
 from ._themes import theme_std
 import warnings
 
