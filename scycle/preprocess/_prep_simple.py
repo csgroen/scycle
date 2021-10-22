@@ -7,6 +7,10 @@ from ..data import (
     g2m_markers,
     g1s_markers,
     histone_markers,
+    g2m_markers_short,
+    g1s_markers_short,
+    G2M_genes_Freeman,
+    G1S_genes_Freeman
 )
 from scipy.stats import zscore
 import gc
