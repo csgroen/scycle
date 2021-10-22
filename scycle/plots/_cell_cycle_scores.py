@@ -26,6 +26,7 @@ def cell_cycle_scores(
     alpha=1,
     curvature_shrink=1,
     lab_ypos=2,
+    show_curvature = True
 ):
     """Plots cell cycle signatures vs pseudotime
 
@@ -44,6 +45,8 @@ def cell_cycle_scores(
         A value between 0 and 1. Controls point transparency.
     lab_ypos: float
         Controls the y-axis position of the cell cycle phase annotation.
+    show_curvature:
+        Controls whether curvature is shown
 
     Returns
     --------------
@@ -62,7 +65,8 @@ def cell_cycle_scores(
                     + labs(x="Pseudotime", y="Signature scores", color="Signature"))
 
     # -- Add cell cycle annotations
-    if "cell_cycle_division" in adata.uns["scycle"]:
+    if ("cell_cycle_division" in adata.uns["scycle"]) and show_curvature:
+        cc_divs = adata.uns["scycle"]["cell_cycle_division"]
         # -- Curvature data
         curv_data = cc_divs["curvature"]
         curv = curv_data["curvature"].values
