@@ -70,10 +70,12 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
                 sannot[var] = adata[:,var].X.flatten()
         plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'],
                           var_name = 'signature', value_name = 'score')
+        plot_df['signature'] = plot_df['signature'].astype('category')
+        plot_df['signature'].cat.reorder_categories(y, inplace=True)
 
         if facet:
             time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
-             + facet_wrap('signature', scales = 'free_y', ncol = ncol) +
+             + facet_wrap('signature', scales = 'free_y', ncol = ncol)
              + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
              + theme_std)
         else:
