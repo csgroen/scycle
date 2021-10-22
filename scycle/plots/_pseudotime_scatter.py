@@ -6,7 +6,8 @@ from plotnine import ggplot, aes, geom_point, labs, facet_wrap
 from ._themes import theme_std
 import warnings
 
-def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1, color = 'black', ncol = 2):
+def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
+                       color = 'black', ncol = 2, lab_ypos = 2):
     """Plots a scatter plot of pseudotime vs one or multiple variables
 
     Parameters
@@ -30,6 +31,8 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1, color = 'b
         Ignored otherwise.
     ncol: int
         Number of columns in the facetting, if facet=True. Ignored otherwise.
+    lab_ypos: float
+        Controls the y-axis position of the cell cycle phase annotation, if present.
 
     Returns
     -------------

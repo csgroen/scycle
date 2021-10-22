@@ -58,9 +58,8 @@ def cell_cycle_scores(
         y = ["G1-S comp", "G2-M comp", "G2-M- comp", "Histone comp"]
         colors = ['#8ca0c9', '#ff8d68', "#e5c494", '#5cc2a6', "black"]
 
-    time_scatter = pseudotime_scatter(adata, y=y, facet = False, size=size, alpha=alpha) + labs(
-        x="Pseudotime", y="Signature scores", color="Signature"
-    )
+    time_scatter = (pseudotime_scatter(adata, y=y, facet = False, size=size, alpha=alpha, lab_ypos=lab_ypos)
+                    + labs(x="Pseudotime", y="Signature scores", color="Signature"))
 
     # -- Add cell cycle annotations
     if "cell_cycle_division" in adata.uns["scycle"]:
