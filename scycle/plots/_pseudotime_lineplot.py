@@ -2,13 +2,18 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-from plotnine import ggplot, aes, geom_point, labs, facet_wrap, geom_vline, geom_text
+from plotnine import ggplot, aes, geom_point, labs, facet_wrap, geom_vline, geom_text, geom_smooth
 from ._themes import theme_std
 import warnings
 
-def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
-                       color = 'black', ncol = 2, lab_ypos = 2):
-    """Plots a scatter plot of pseudotime vs one or multiple variables
+# import scycle as cc
+# adata = cc.tl.read('/home/clarice/Desktop/test.zip')
+# ncol = 2; alpha = 1; size = 1; color = 'black'; smoothness = 0.3
+y = ['TOP2A', 'CCNB1', 'CCNA2']
+
+def pseudotime_lineplot(adata, y, smoothness = 0.3, facet = True, alpha = 1,
+                       size = 1, color = 'black', ncol = 2, lab_ypos = 2):
+    """Plots a line plot of pseudotime vs one or multiple variables
 
     Parameters
     --------------
@@ -19,13 +24,15 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
         If type(y) == str, y must be a variable annotated in adata.obs and
         will be used as the y-axis. If type(y) == list, then multiple variables
         will be plotted using a shared y-axis but different point colors.
+    span: float
+        Controls the smoothness of the regression. See: span in `plotnine.geom_smooth()`
     facet: bool
         Whether to return a facetted plot or all signatures in a single plot.
         Only used if y is a list.
-    size: float
-        Controls the point size of the plot.
     alpha: float
         A value between 0 and 1. Controls point transparency.
+    size: float
+        Controls the line width of the smooth line.
     color: str
         A supported color name. Controls the point color if type(y)==str.
         Ignored otherwise.
@@ -36,7 +43,7 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
 
     Returns
     -------------
-    A plotnine scatter plot of pseudotime.
+    A plotnine line plot of pseudotime.
     """
     if type(y) == str:
         #-- Get data
@@ -49,13 +56,13 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
 
         #-- Make plot
         if color in adata.obs.columns:
-            time_scatter = (ggplot(plot_df, aes(x = 'x', y = 'y'))
-              + geom_point(aes(color = color), size = size, alpha = alpha)
+            time_line = (ggplot(plot_df, aes(x = 'x', y = 'y'))
+              + geom_smooth(aes(color = color), method = 'lowess', size = size, alpha = alpha, span = smoothness, se = False)
               + labs(x = 'Pseudotime', y = y)
               + theme_std)
         else:
-            time_scatter = (ggplot(plot_df, aes(x = 'x', y = 'y'))
-              + geom_point(size = size, alpha = alpha, color = color)
+            time_line = (ggplot(plot_df, aes(x = 'x', y = 'y'))
+              + geom_smooth(method = 'lowess', size = size, alpha = alpha, color = color, span = smoothness, se = False)
               + labs(x = 'Pseudotime', y = y)
               + theme_std)
 
@@ -82,17 +89,18 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
         plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'],
                           var_name = 'signature', value_name = 'score')
         plot_df['signature'] = plot_df['signature'].astype('category')
+        plot_df['signature'].cat.categories
         plot_df['signature'].cat.reorder_categories(y, inplace=True)
 
         if facet:
-            time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
-             + facet_wrap('signature', scales = 'free_y', ncol = ncol)
-             + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
-             + theme_std)
+            time_line = (ggplot(plot_df, aes('pseudotime', 'score'))
+            + facet_wrap('signature', scales = 'free_y', ncol = ncol)
+            + geom_smooth(aes(color = 'signature'), method='lowess', size = size, span = smoothness, se = False)
+            + theme_std)
         else:
-            time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
-             + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
-             + theme_std)
+            time_line = (ggplot(plot_df, aes('pseudotime', 'score'))
+            + geom_smooth(aes(color = 'signature'), method='lowess', size = size, span = smoothness, se = False)
+            + theme_std)
 
     if "cell_cycle_division" in adata.uns["scycle"]:
         cc_divs = adata.uns["scycle"]["cell_cycle_division"]
@@ -115,14 +123,8 @@ def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1,
                 y=lab_ypos,
             )
         )
-        time_scatter = (time_scatter
+        time_line = (time_line
         + geom_vline(aes(xintercept="starts"), linetype="dashed", data=cc_phase)
         + geom_text(aes(x="labpos", y="y", label="labels"), data=cc_phase))
 
-    return time_scatter
-
-def scatter_pseudotime(adata, y, facet = False, size = 1.5, alpha = 1, color = 'black'):
-    """DEPRECATED: use pseudotime_scatter
-    """
-    warnings.warn("scatter_pseudotime is deprecated; use pseudotime_scatter", DeprecationWarning)
-    return (pseudotime_scatter(adata))
+    return time_line
