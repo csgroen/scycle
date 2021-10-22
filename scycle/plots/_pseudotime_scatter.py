@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 from plotnine import ggplot, aes, geom_point, labs, facet_wrap
 from ._themes import theme_std
 import warnings
