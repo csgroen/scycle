@@ -7,7 +7,7 @@ from ._remap_nodes import remap_nodes
 import warnings
 
 def cell_division (adata: AnnData,
-                   var = 'total_counts',
+                   var = 'G2-M',
                    dir_var = 'total_counts',
                    remap = True,
                    verbose: bool= True):
