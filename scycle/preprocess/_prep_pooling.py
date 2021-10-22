@@ -80,7 +80,6 @@ def prep_pooling(
         True,
         log_transform,
         1,
-        score_cell_cycle,
         False,
     )
 
@@ -103,7 +102,6 @@ def prep_pooling(
         False,
         log_transform,
         1,
-        score_cell_cycle,
         verbose,
     )
 
