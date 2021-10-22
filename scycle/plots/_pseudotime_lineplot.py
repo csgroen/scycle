@@ -9,9 +9,9 @@ import warnings
 # import scycle as cc
 # adata = cc.tl.read('/home/clarice/Desktop/test.zip')
 # ncol = 2; alpha = 1; size = 1; color = 'black'; smoothness = 0.3
-y = ['TOP2A', 'CCNB1', 'CCNA2']
+# y = ['TOP2A', 'CCNB1', 'CCNA2']
 
-def pseudotime_lineplot(adata, y, smoothness = 0.3, facet = True, alpha = 1,
+def pseudotime_lineplot(adata, y, facet = True, alpha = 1,
                        size = 1, color = 'black', ncol = 2, lab_ypos = 2):
     """Plots a line plot of pseudotime vs one or multiple variables
 
@@ -24,8 +24,6 @@ def pseudotime_lineplot(adata, y, smoothness = 0.3, facet = True, alpha = 1,
         If type(y) == str, y must be a variable annotated in adata.obs and
         will be used as the y-axis. If type(y) == list, then multiple variables
         will be plotted using a shared y-axis but different point colors.
-    span: float
-        Controls the smoothness of the regression. See: span in `plotnine.geom_smooth()`
     facet: bool
         Whether to return a facetted plot or all signatures in a single plot.
         Only used if y is a list.
