@@ -20,7 +20,7 @@ def prep_simple(
     normalize_counts: bool = True,
     filter_var_genes: bool = True,
     n_top_genes: int = 10000,
-    for_pooling: bool = True,
+    for_pooling: bool = False,
     log_transform: bool = True,
     division_factor: float = 1,
     verbose: bool = True,

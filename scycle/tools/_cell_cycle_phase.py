@@ -62,8 +62,8 @@ def cell_cycle_phase(adata,
     #-- Get peaks closest to transition_refs
     sref_time, g2ref_time = transition_refs
     # sref_time, g2ref_time, mref_time = transition_refs
-    s_start = _transition_time(sref_time, peak_times, max_refdist)
-    g2m_start = _transition_time(g2ref_time, peak_times, max_refdist)
+    pr_start = _transition_time(sref_time, peak_times, max_refdist)
+    rep_start = _transition_time(g2ref_time, peak_times, max_refdist)
     # m_start = _transition_time(mref_time, peak_times, max_refdist)
 
     # -- Save curvature info
@@ -74,17 +74,14 @@ def cell_cycle_phase(adata,
     # -- Inform
     if verbose:
         print("-- Suggested cell cycle division:")
-        print("G1:", " 0  ", "-", s_start)
-        print("S: ", s_start, "-", g2m_start)
-        print("G2-M:", g2m_start, "-", 1)
-        # print("G2-M:", g2m_start, "-", m_start)
-        # print("M: ", m_start, "-   1")
+        print("G1 post-mitotic:", " 0  ", "-", pr_start)
+        print("G1 pre-replication: ", pr_start, "-", rep_start)
+        print("S/G2/M:", rep_start, "-", 1)
 
     # -- Return
     adata.uns["scycle"]["cell_cycle_division"] = {
-        "s_start": s_start,
-        "g2m_start": g2m_start,
-        # "m_start": m_start,
+        "pr_start": pr_start,
+        "rep_start": rep_start,
         "curvature": curv_data,
     }
 

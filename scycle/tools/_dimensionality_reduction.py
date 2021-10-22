@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import elpigraph
+import warnings
 from typing import Optional
 
 # from sklearn.cross_decomposition import CCA
@@ -70,12 +71,10 @@ def dimensionality_reduction(
     """
 
     if "scycle" not in adata.uns:
-        raise Exception(
-            (
-                "Data needs to be pre-processed by `pp.prep_pooling`"
-                + "or `pp.prep_simple`, before dimensionality reduction"
-            )
-        )
+        adata.uns['scycle'] = dict()
+        warnings.warn(
+            "Data has not been pre-processed using scycle (`pp.prep_pooling`" +
+            "or `pp.prep_simple`), before dimensionality reduction")
     if method in ["pcaCCgenes", "icaCCgenes"]:
         adata_cc = _adata_CCgenes(adata)
         genes = np.array(adata_cc.var.index)

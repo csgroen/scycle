@@ -24,7 +24,7 @@ def cell_cycle_phase_barplot(adata, palette='Set2'):
 
     """
     plt_data = adata.obs.copy()
-    plt_data['cell_cycle_phase'] = pd.Categorical(plt_data['cell_cycle_phase'], categories = ['G2-M', 'S', 'G1'])
+    plt_data['cell_cycle_phase'] = pd.Categorical(plt_data['cell_cycle_phase'], categories = ['G1 post-mitotic', 'G1 pre-replication', 'S/G2/M'])
 
     cycle_plot = (ggplot(plt_data, aes('cell_cycle_phase', fill = 'cell_cycle_phase'))
     + geom_bar()
@@ -41,7 +41,7 @@ def cell_cycle_phase_barplot(adata, palette='Set2'):
 
     return cycle_plot
 
-def cell_cycle_phase_pieplot(adata, colors = ['#e78ac3', '#8da0cb', '#fc8d62', '#66c2a5']):
+def cell_cycle_phase_pieplot(adata, colors = [ '#66c2a5', '#fc8d62', '#8da0cb']):
     """Plots the proportion of cells in each phase of the cell cycle
 
     See also: cell_cycle_phase_barplot for the plotnine barplot
@@ -52,8 +52,8 @@ def cell_cycle_phase_pieplot(adata, colors = ['#e78ac3', '#8da0cb', '#fc8d62', '
         The AnnData object being used for the analysis. Must be previously
         evaluated by `tl.annotate_cell_cycle`.
     colors: list of length 4
-        A list of 4 colors to be used for the pie-chart for G1, S, G2 and M
-        phase, respectively.
+        A list of 4 colors to be used for the pie-chart for G1 post-mitotic,
+        G1 pre-replication and S/G2/M, respectively.
 
     Returns
     -----------

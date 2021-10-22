@@ -39,7 +39,7 @@ def get_data(dataset):
             _download_scdata(url_sc200, fname)
             print('-- Download concluded.')
     else:
-        print("Dataset not in list of supported datasets. Must be one of:" + datasets)
+        print("Dataset not in list of supported datasets. Must be one of:" + ', '.join(datasets))
         return None
 
     #-- Load from cache
