@@ -5,7 +5,9 @@ import pandas as pd
 import elpigraph
 from anndata import AnnData
 from sklearn.decomposition import PCA
+from scipy.sparse import issparse
 import warnings
+
 
 def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     """Calculates the principal circle nodes and edges for estimation of
@@ -58,14 +60,15 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     adata.obs["partition"] = partition
 
     # -- Count per node
-    total_counts = adata.obs["total_counts"].to_numpy()
+    node_coords['total_counts'] = _var_per_node(adata, node_p, 'total_counts')
+    edge_data = pd.DataFrame({"e1": e1, "e2": e2, "mean_counts": node_coords['total_counts']})
 
-    node_read_counts = [
-        np.mean(total_counts[np.where(partition == i)[0]]) for i in range(len(node_p))
-    ]
-    node_coords["total_counts"] = node_read_counts
+    #-- Cell cycle scores per node
+    node_coords['G1-S'] = _var_per_node(adata, node_p, 'G1-S')
+    node_coords['G2-M'] = _var_per_node(adata, node_p, 'G2-M')
 
-    edge_data = pd.DataFrame({"e1": e1, "e2": e2, "mean_counts": node_read_counts})
+    edge_coords['G1-S'] = np.append(node_coords['G1-S'].values, [node_coords['G1-S'].values[0]])
+    edge_coords['G2-M'] = np.append(node_coords['G2-M'].values, [node_coords['G2-M'].values[0]])
 
     # -- Project in lower dimension
     n_ldims = np.min([n_dims, 3])
@@ -94,6 +97,14 @@ def trajectory(adata: AnnData, n_nodes: int = 30, verbose: bool = False):
     }
     adata.uns["scycle"]["principal_circle"] = {"n_nodes": n_nodes}
 
+def _var_per_node(adata, node_p, var):
+    var_values = adata.obs[var].to_numpy()
+
+    var_means = [
+        np.mean(var_values[np.where(adata.obs["partition"] == i)[0]]) for i in range(len(node_p))
+    ]
+    return(var_means)
+
 def _get_gr_coords(adata):
     # Get the node coordinates
     node_p = adata.uns["egr"]["NodePositions"]
@@ -110,6 +121,7 @@ def _get_gr_coords(adata):
     # -- Add node positions
     node_coords = node_coords.merge(node_ord_df, how="left", on="nid")
     node_coords = node_coords.sort_values("npos")
+    node_coords.reset_index(drop=True, inplace=True)
 
     return node_coords, edge_coords
 
@@ -142,6 +154,8 @@ def _get_edge_coords(point_coords, edges):
         point_coords, how="left", left_on="nid", right_on="nid"
     ).sort_values("eid")
     node_order = s_order
+
+    edge_coords.reset_index(drop=True, inplace=True)
 
     return edge_coords, node_order
 

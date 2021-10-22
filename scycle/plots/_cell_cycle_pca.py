@@ -42,10 +42,20 @@ def cell_cycle_projection(
     alpha: float
         Controls the transparency of the points of the scatterplot.
         [0 = completly transparent, 1 = completly opaque]
+    trajectory: bool
+        If True and the principal circle has already been calculated, the trajectory
+        is added.
+    node_size: float
+        Controls the size of the node points of the principal circle.
+    node_color: str
+        If 'total_counts', shows the node average total_counts. Otherwise, must
+        be a supported color name. e.g. node_color = 'black'.
+    show_nid: bool
+        If True, shows the node identified by the node points.
 
     Returns
     --------------
-    A plotnine scatter plot of the 2-D projection of all cells.
+    A plotnine scatter plot of the 2-D projection on G1-S vs G2-M of all cells.
     """
     ax_names = ['G1/S', 'G2/M']
 
@@ -67,6 +77,28 @@ def cell_cycle_projection(
             + theme_std
             + labs(x=ax_names[0], y=ax_names[1])
         )
+
+    if trajectory and "principal_circle" in adata.uns["scycle"].keys():
+        # Get the circle coordinates
+        node_coords = adata.uns["princirc_gr"]["node_coords"]
+        edge_coords = adata.uns["princirc_gr"]["edge_coords"]
+
+        # Add to plot
+        proj_plot = (
+            proj_plot
+            + geom_path(aes(x="G1-S", y="G2-M"), data=edge_coords)
+            + geom_point(
+                aes(x="G1-S", y="G2-M"),
+                color=node_color,
+                size=node_size,
+                data=node_coords,
+            )
+        )
+
+        if show_nid:
+            proj_plot = proj_plot + geom_text(
+                aes("G1-S", "G2-M", label="npos"), data=node_coords, size=10
+            )
     return proj_plot
 
 def cell_cycle_pca(
