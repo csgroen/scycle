@@ -18,7 +18,6 @@ def prep_pooling(
     n_top_genes: int = 10000,
     log_transform: bool = True,
     division_factor: float = 1,
-    score_cell_cycle: bool = True,
     verbose: bool = True,
 ):
     """Pre-processes AnnData with cell pooling
@@ -47,8 +46,6 @@ def prep_pooling(
         Set it to false if you do not want values to be log-transformed.
     division_factor: int
         Scaling factor, divides the counts matrix by this value.
-    score_cell_cycle: bool
-        Should cell cycle scores be added?
     verbose: bool
         If True, messages about function progress will be printed.
 

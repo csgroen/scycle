@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import pandas as pd
-from plotnine import ggplot, aes, geom_point, labs
+from plotnine import ggplot, aes, geom_point, labs, facet_wrap
 from ._themes import theme_std
 import warnings
 
-def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
+def pseudotime_scatter(adata, y, facet = True, size = 1.5, alpha = 1, color = 'black', ncol = 2):
     """Plots a scatter plot of pseudotime vs one or multiple variables
 
     Parameters
@@ -17,6 +17,9 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
         If type(y) == str, y must be a variable annotated in adata.obs and
         will be used as the y-axis. If type(y) == list, then multiple variables
         will be plotted using a shared y-axis but different point colors.
+    facet: bool
+        Whether to return a facetted plot or all signatures in a single plot.
+        Only used if y is a list.
     size: float
         Controls the point size of the plot.
     alpha: float
@@ -24,6 +27,8 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
     color: str
         A supported color name. Controls the point color if type(y)==str.
         Ignored otherwise.
+    ncol: int
+        Number of columns in the facetting, if facet=True. Ignored otherwise.
 
     Returns
     -------------
@@ -59,18 +64,47 @@ def pseudotime_scatter(adata, y, size = 1.5, alpha = 1, color = 'black'):
                 sannot[var] = adata.obs[var]
             elif var in adata.var_names:
                 sannot[var] = adata[:,var].X.flatten()
-
-
         plot_df = pd.melt(sannot, id_vars = ['id', 'pseudotime'],
-                            var_name = 'signature', value_name = 'score')
+                          var_name = 'signature', value_name = 'score')
 
-        time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
-         + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
-         + theme_std)
+        if facet:
+            time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
+             + facet_wrap('signature', scales = 'free_y', ncol = ncol) +
+             + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
+             + theme_std)
+        else:
+            time_scatter = (ggplot(plot_df, aes('pseudotime', 'score'))
+             + geom_point(aes(color = 'signature'), alpha = alpha, size = size)
+             + theme_std)
+
+    if "cell_cycle_division" in adata.uns["scycle"]:
+        cc_divs = adata.uns["scycle"]["cell_cycle_division"]
+        # -- Cell cycle annotation
+        cc_phase = pd.DataFrame(
+            dict(
+                starts=[
+                    None,
+                    cc_divs["s_start"],
+                    cc_divs["g2m_start"],
+                    # cc_divs["m_start"],
+                ],
+                labels=["G1", "S", "G2-M"],
+                labpos=[
+                    np.mean([0, cc_divs["s_start"]]),
+                    np.mean([cc_divs["s_start"], cc_divs["g2m_start"]]),
+                    np.mean([cc_divs["g2m_start"], 1]),
+                    # np.mean([cc_divs["m_start"], 1]),
+                ],
+                y=lab_ypos,
+            )
+        )
+        time_scatter = (time_scatter
+        + geom_vline(aes(xintercept="starts"), linetype="dashed", data=cc_phase)
+        + geom_text(aes(x="labpos", y="y", label="labels"), data=cc_phase))
 
     return time_scatter
 
-def scatter_pseudotime(adata, y, size = 1.5, alpha = 1, color = 'black'):
+def scatter_pseudotime(adata, y, facet = False, size = 1.5, alpha = 1, color = 'black'):
     """DEPRECATED: use pseudotime_scatter
     """
     warnings.warn("scatter_pseudotime is deprecated; use pseudotime_scatter", DeprecationWarning)

@@ -58,14 +58,12 @@ def cell_cycle_scores(
         y = ["G1-S comp", "G2-M comp", "G2-M- comp", "Histone comp"]
         colors = ['#8ca0c9', '#ff8d68', "#e5c494", '#5cc2a6', "black"]
 
-    time_scatter = pseudotime_scatter(adata, y=y, size=size, alpha=alpha) + labs(
+    time_scatter = pseudotime_scatter(adata, y=y, facet = False, size=size, alpha=alpha) + labs(
         x="Pseudotime", y="Signature scores", color="Signature"
     )
 
     # -- Add cell cycle annotations
     if "cell_cycle_division" in adata.uns["scycle"]:
-        cc_divs = adata.uns["scycle"]["cell_cycle_division"]
-
         # -- Curvature data
         curv_data = cc_divs["curvature"]
         curv = curv_data["curvature"].values
@@ -79,25 +77,6 @@ def cell_cycle_scores(
         pk_data = curv_data[curv_data["ispeak"] == "peak"]
         pk_data.loc[:, "ymin"] = gr_min
 
-        # -- Cell cycle annotation
-        cc_phase = pd.DataFrame(
-            dict(
-                starts=[
-                    None,
-                    cc_divs["s_start"],
-                    cc_divs["g2m_start"],
-                    # cc_divs["m_start"],
-                ],
-                labels=["G1", "S", "G2-M"],
-                labpos=[
-                    np.mean([0, cc_divs["s_start"]]),
-                    np.mean([cc_divs["s_start"], cc_divs["g2m_start"]]),
-                    np.mean([cc_divs["g2m_start"], 1]),
-                    # np.mean([cc_divs["m_start"], 1]),
-                ],
-                y=lab_ypos,
-            )
-        )
 
         cell_cycle_plt = (
             time_scatter
@@ -111,10 +90,7 @@ def cell_cycle_scores(
                 linetype="dotted",
                 data=pk_data,
             )
-            + geom_vline(aes(xintercept="starts"), linetype="dashed", data=cc_phase)
-            + geom_text(aes(x="labpos", y="y", label="labels"), data=cc_phase)
         )
-
         return cell_cycle_plt
     else:
         return time_scatter + scale_color_manual(values=colors[0:-1])

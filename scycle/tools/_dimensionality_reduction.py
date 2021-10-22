@@ -17,7 +17,7 @@ import gc
 
 def dimensionality_reduction(
     adata: AnnData,
-    method: str = "ica",
+    method: str = "pcaCCgenes",
     n_comps: int = 30,
     seed: Optional[int] = None,
     max_iter: int = 200,

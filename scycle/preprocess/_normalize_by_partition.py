@@ -16,9 +16,9 @@ from ..tools import (
 )
 
 def normalize_by_partition(
-    adata_src: AnnData, 
-    adata_ref: AnnData = None, 
-    rerun_pc: bool = False, 
+    adata_src: AnnData,
+    adata_ref: AnnData = None,
+    rerun_pc: bool = False,
     n_ref_parts: int = 20,
     verbose: bool = True
 ):
@@ -50,16 +50,10 @@ def normalize_by_partition(
     if "scycle" not in adata_ref.uns:
         print("Preprocessing reference with default values...")
         prep_pooling(adata_ref, verbose=False)
-        dimensionality_reduction(adata_ref, method="ica", verbose=False)
-        find_cc_components(adata_ref, verbose=False)
+        dimensionality_reduction(adata_ref, method="pcaCCgenes", verbose=False)
     elif 'dimRed' not in adata_ref.uns['scycle'].keys():
         print("Preprocessing reference with default values...")
-        dimensionality_reduction(adata_ref, method="ica", verbose=False)
-        find_cc_components(adata_ref, verbose=False)
-    elif 'find_cc_components' not in adata_ref.uns['scycle'].keys():
-        if adata_ref.uns['scycle']['dimRed']['method'] == 'ica':
-            print("Preprocessing reference with default values...")
-            find_cc_components(adata_ref, verbose=False)
+        dimensionality_reduction(adata_ref, method="pcaCCgenes", verbose=False)
 
     sct_didntrun = 'self-consistent_trajectory' not in adata_ref.uns["scycle"].keys()
     if sct_didntrun | rerun_pc:
@@ -72,7 +66,7 @@ def normalize_by_partition(
 
     # ---- Get partitions and re-normalize
     prt = adata_ref.obs["partition"]
-    
+
     gexp_raw = adata_src.layers['matrix'] # "raw" data
     gexp = adata_src.X
 
@@ -86,7 +80,7 @@ def normalize_by_partition(
         median_per_partition[p] = np.median(
             totals
         )  # median counts for samples in group
-        
+
         rtotals = gexp_raw[sidx,:].sum(1)
         rmedian_per_partition[p] = np.median(rtotals)
 
@@ -101,7 +95,7 @@ def normalize_by_partition(
     rmedians = (1 - offsets) * rmedian_per_partition[
         prt
     ] + offsets * rmedian_per_partition[next_prt]
-    
+
     #-- Normalize counts
     if verbose: print("Re-normalizing counts by partition...")
     part_meds = np.array(medians).reshape(len(gexp), 1)
@@ -109,9 +103,8 @@ def normalize_by_partition(
     adata_src.layers['matrix'] = gexp_raw / rtotals * part_rmeds
     adata_src.layers['unnorm'] = gexp
     adata_src.X = gexp / totals * part_meds
-    
+
     new_totals = adata_src.layers['matrix'].sum(1)
-    
+
     adata_src.obs["total_counts"] = new_totals
     adata_src.obs["total_counts_raw"] = old_totals
-    

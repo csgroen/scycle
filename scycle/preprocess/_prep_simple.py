@@ -19,7 +19,6 @@ def prep_simple(
     for_pooling: bool = True,
     log_transform: bool = True,
     division_factor: float = 1,
-    score_cell_cycle: bool = True,
     verbose: bool = True,
 ):
     """Pre-processes AnnData without pooling. Should be done only once.
@@ -42,8 +41,6 @@ def prep_simple(
         Set it to false if you do not want values to be log-transformed.
     division_factor: int
         Scaling factor, divides the counts matrix by this value.
-    score_cell_cycle: bool
-        Should cell cycle scores be added?
     verbose: bool
         If True, messages about function progress will be printed.
 
@@ -64,12 +61,11 @@ def prep_simple(
     if normalize_counts:
         sc.pp.normalize_total(adata, target_sum=np.median(adata.obs["total_counts"]))
 
-    if score_cell_cycle:
-        if verbose:
-            print("Scoring cell cycle...")
-        _score_cell_cycle(adata, g1s_markers, "G1-S")
-        _score_cell_cycle(adata, g2m_markers, "G2-M")
-        _score_cell_cycle(adata, histone_markers, "Histones")
+    if verbose:
+        print("Scoring cell cycle...")
+    _score_cell_cycle(adata, g1s_markers, "G1-S")
+    _score_cell_cycle(adata, g2m_markers, "G2-M")
+    _score_cell_cycle(adata, histone_markers, "Histones")
 
     # Highly variable genes filtering
     if filter_var_genes:
