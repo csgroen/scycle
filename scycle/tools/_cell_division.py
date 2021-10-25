@@ -65,8 +65,8 @@ def cell_division (adata: AnnData,
         for i in range(len(edges)-1):
             diff_var[i] = edges['mean_var'][i+1] - edges['mean_var'][i]
         edges['diff_var'] = diff_var if direction == 1 else -diff_var
-
-        div_edge = edges['diff_var'].idxmin()
+        div_edge = edges['mean_var'].idxmax()
+        # div_edge = edges['diff_var'].idxmin()
         sugg_edge = edges.iloc[div_edge][['e1', 'e2']].values.astype(int)
 
     else:

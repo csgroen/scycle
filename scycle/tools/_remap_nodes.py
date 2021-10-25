@@ -6,7 +6,7 @@ import numpy as np
 import elpigraph
 from anndata import AnnData
 
-def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
+def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
                 cycle_direction: Optional[int]=None,
                 verbose = True):
     """ Remap principal circle nodes so that it starts at the moment of
@@ -44,9 +44,9 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
 
     #-- Get cell div edge/cycle direction
     if celldiv_edge == None:
-        div_edge = adata.uns['scycle']['cell_div_moment']['cell_div_edge']
+        div_node = adata.uns['scycle']['cell_div_moment']['start_node']
     else:
-        div_edge = celldiv_edge
+        div_node = start_node
 
     if cycle_direction == None:
         cdir = adata.uns['scycle']['cell_div_moment']['cell_cycle_direction']
@@ -57,14 +57,12 @@ def remap_nodes(adata: AnnData, celldiv_edge: Optional[list]= None,
     if verbose: print('Remapping edges using', div_edge, '...')
 
     #-- Get remapping positions
+    start = start_node
     if cdir > 0:
-        start = div_edge[0]
         remap_vec = np.array(range(start, n_nodes+start))
         idx = remap_vec >= n_nodes
         remap_vec[idx] = remap_vec[idx] - n_nodes
-
     else:
-        start = div_edge[0]
         remap_vec = [start - el if el <= start else (n_nodes + start) - el for el in range(n_nodes)]
         # remap_edgec = [start - el if el <= start else (n_nodes + start) - el for el in range(n_nodes+1)]
 
