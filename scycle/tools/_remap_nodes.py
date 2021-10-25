@@ -57,7 +57,7 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
     if verbose: print('Remapping edges using', div_node, '...')
 
     #-- Get remapping positions
-    start = start_node
+    start = div_node
     if cdir > 0:
         remap_vec = np.array(range(start, n_nodes+start))
         idx = remap_vec >= n_nodes
