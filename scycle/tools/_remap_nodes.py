@@ -16,7 +16,7 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
     -------------
     adata: AnnData
         The analysis object to be evaluated. Must be previously evaluated by
-        `tl.principal_circle` and `tl.celldiv_moment` if `celldiv_edge` and
+        `tl.principal_circle` and `tl.celldiv_moment` if `start_node` and
         `cycle_direction` are not provided.
     start_node: optional int
         The node that corresponds to start of cell cycle. If not
@@ -54,7 +54,7 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
         cdir = cycle_direction
 
     #-- Remapping edges and nodes
-    if verbose: print('Remapping edges using', div_edge, '...')
+    if verbose: print('Remapping edges using', div_node, '...')
 
     #-- Get remapping positions
     start = start_node
