@@ -82,7 +82,7 @@ def cell_division (adata: AnnData,
         # sugg_edge = edges.iloc[edge_to_max][['e1', 'e2']].values.astype(int)
 
     if verbose:
-        print('Suggested moment of cell division:', sugg_edge)
+        print('Suggested moment of cell division:', div_edge)
         print('Direction of cell cycle:', str(direction))
 
     #-- Add data to object

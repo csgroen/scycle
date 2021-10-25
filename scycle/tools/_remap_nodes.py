@@ -18,9 +18,9 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
         The analysis object to be evaluated. Must be previously evaluated by
         `tl.principal_circle` and `tl.celldiv_moment` if `celldiv_edge` and
         `cycle_direction` are not provided.
-    celldiv_edge: optional list of length 2
-        The edge that corresponds to the moment of cell division. If not
-        provided, the edge suggested by `tl.celldiv_moment` will be used.
+    start_node: optional int
+        The node that corresponds to start of cell cycle. If not
+        provided, the node suggested by `tl.cell_division` will be used.
     cycle_direction: optional integer 1 or -1
         The direction of increase of the nodes according to the cell cycle
         (1 for clockwise, -1 for counter-clockwise). If not provided, the
@@ -43,7 +43,7 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
     n_nodes = len(node_coords)
 
     #-- Get cell div edge/cycle direction
-    if celldiv_edge == None:
+    if start_node == None:
         div_node = adata.uns['scycle']['cell_div_moment']['start_node']
     else:
         div_node = start_node
