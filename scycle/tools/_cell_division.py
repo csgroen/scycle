@@ -67,7 +67,7 @@ def cell_division (adata: AnnData,
         edges['diff_var'] = diff_var if direction == 1 else -diff_var
         div_edge = edges['mean_var'].idxmax()
         # div_edge = edges['diff_var'].idxmin()
-        sugg_edge = edges.iloc[div_edge][['e1', 'e2']].values.astype(int)
+        # sugg_edge = edges.iloc[div_edge][['e1', 'e2']].values.astype(int)
 
     else:
         edges['mean_var'] = adata.obs.groupby('partition').mean()[var]
@@ -78,8 +78,8 @@ def cell_division (adata: AnnData,
         edges['diff_var'] = diff_var
 
         #-- Find moment of division (max abs diff)
-        edge_to_max = np.argmax(edges['diff_var'])
-        sugg_edge = edges.iloc[edge_to_max][['e1', 'e2']].values.astype(int)
+        div_edge = np.argmax(edges['diff_var'])
+        # sugg_edge = edges.iloc[edge_to_max][['e1', 'e2']].values.astype(int)
 
     if verbose:
         print('Suggested moment of cell division:', sugg_edge)
@@ -87,7 +87,7 @@ def cell_division (adata: AnnData,
 
     #-- Add data to object
     adata.uns['scycle']['cell_div_moment'] = {'ref_var': var,
-                                              'cell_div_edge': sugg_edge,
+                                              'start_node': div_edge,
                                               'cell_cycle_direction': direction}
     if remap:
         remap_nodes(adata, verbose = verbose)

@@ -79,7 +79,7 @@ def remap_nodes(adata: AnnData, start_node: Optional[list]= None,
 
     adata.uns['princirc_gr'] = {'node_coords': node_coords, 'edge_coords': edge_coords,
                                 'edges': edges, 'edge_tree': edge_tree}
-    adata.uns['scycle']['cell_div_moment']['cell_div_edge'] = [0,1]
+    adata.uns['scycle']['cell_div_moment']['start_node'] = 0
     adata.uns['scycle']['cell_div_moment']['cell_cycle_direction'] = 1
     adata.obs['partition'] = partition
 
