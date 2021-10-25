@@ -73,16 +73,16 @@ def integration(
     )
     assert (
         "dimRed" in _adata_ref.uns
-    ), "ICA projection matrix missing in source AnnData. \
-        Dimensionality reduction must be computed first."
+    ), "Dimensionality reduction missing in source AnnData. \
+        tl.dimensionality_reduction must be computed first."
 
     # Selecting the cell-cycle ICs components
-    if len(components) == 0:
-        if verbose:
-            print("-- Automatically detecting cell-cycle components...")
-        if "find_cc_components" not in _adata_ref.uns["scycle"].keys():
-            find_cc_components(_adata_ref)
-        components = list(_adata_ref.uns["scycle"]["find_cc_components"]["indices"].values())
+    # if len(components) == 0:
+    #     if verbose:
+    #         print("-- Automatically detecting cell-cycle components...")
+    #     if "find_cc_components" not in _adata_ref.uns["scycle"].keys():
+    #         find_cc_components(_adata_ref)
+    #     components = list(_adata_ref.uns["scycle"]["find_cc_components"]["indices"].values())
 
     if verbose:
         print("-- Integrating datasets...")
@@ -106,22 +106,42 @@ def integration(
     adata_ref = _adata_ref[:, common_genes]
     adata_src = _adata_src[:, common_genes]
 
-    # Projecting both datasets in the same ICs subspace
-    if "X_dimRed" not in adata_ref.obsm:
-        if verbose:
-            print("> Projecting reference dataset...")
-        Y_c = adata_ref.X.copy()
-        Y_c -= np.mean(Y_c, axis=0)
-        adata_ref.obsm["X_dimRed"] = Y_c @ adata_ref.varm["P_dimRed"]
+    dr_method = _adata_src.uns['scycle']['dimRed']['method']
 
-    X_c = adata_src.X.copy()
-    X_c -= np.mean(X_c, axis=0)
-    adata_src.obsm["X_dimRed"] = X_c @ adata_ref.varm["P_dimRed"]
+    if (dr_method == 'pca' | dr_method == 'ica'):
+        # Projecting both datasets in the same ICs subspace
+        if "X_dimRed" not in adata_ref.obsm:
+            if verbose:
+                print("> Projecting reference dataset...")
+            Y_c = adata_ref.X.copy()
+            Y_c -= np.mean(Y_c, axis=0)
+            adata_ref.obsm["X_dimRed"] = Y_c @ adata_ref.varm["P_dimRed"]
 
-    Xs: np.ndarray = adata_src.obsm["X_dimRed"]
-    Xt: np.ndarray = adata_ref.obsm["X_cc"]
+        X_c = adata_src.X.copy()
+        X_c -= np.mean(X_c, axis=0)
+        adata_src.obsm["X_dimRed"] = X_c @ adata_ref.varm["P_dimRed"]
 
-    Xs = Xs[:, components]
+        Xs: np.ndarray = adata_src.obsm["X_dimRed"]
+        Xt: np.ndarray = adata_ref.obsm["X_cc"]
+
+        Xs = Xs[:, components]
+    else:
+        # Projecting both datasets in the same ICs subspace
+        if "X_dimRed" not in adata_ref.obsm:
+            if verbose:
+                print("> Projecting reference dataset...")
+            Y_c = adata_ref.X.copy()
+            Y_c -= np.mean(Y_c, axis=0)
+            adata_ref.obsm["X_dimRed"] = Y_c @ adata_ref.uns["P_dimRed"]
+
+        X_c = adata_src.X.copy()
+        X_c -= np.mean(X_c, axis=0)
+        adata_src.obsm["X_dimRed"] = X_c @ adata_ref.uns["P_dimRed"]
+
+        Xs: np.ndarray = adata_src.obsm["X_dimRed"]
+        Xt: np.ndarray = adata_ref.obsm["X_cc"]
+
+        Xs = Xs[:, components]
 
     # -- Update objects
     if verbose:

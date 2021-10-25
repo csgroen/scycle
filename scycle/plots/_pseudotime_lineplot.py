@@ -8,10 +8,10 @@ import warnings
 
 # import scycle as cc
 # adata = cc.tl.read('/home/clarice/Desktop/test.zip')
-# ncol = 2; alpha = 1; size = 1; color = 'black'; smoothness = 0.3
+# ncol = 2; alpha = 1; size = 1; color = 'black'; smoothness = 0.3; facet = True; lab_ypos = 0
 # y = ['TOP2A', 'CCNB1', 'CCNA2']
 
-def pseudotime_lineplot(adata, y, facet = True, alpha = 1,
+def pseudotime_lineplot(adata, y, facet = True, alpha = 1, smoothness = 0.3,
                        size = 1, color = 'black', ncol = 2, lab_ypos = 2):
     """Plots a line plot of pseudotime vs one or multiple variables
 
@@ -29,6 +29,9 @@ def pseudotime_lineplot(adata, y, facet = True, alpha = 1,
         Only used if y is a list.
     alpha: float
         A value between 0 and 1. Controls point transparency.
+    smoothness: float
+        A value passed to geom_smooth as span. Controls how smooth the
+        LOESS regression will be.
     size: float
         Controls the line width of the smooth line.
     color: str
@@ -55,12 +58,12 @@ def pseudotime_lineplot(adata, y, facet = True, alpha = 1,
         #-- Make plot
         if color in adata.obs.columns:
             time_line = (ggplot(plot_df, aes(x = 'x', y = 'y'))
-              + geom_smooth(aes(color = color), method = 'mavg', size = size, alpha = alpha, se = False)
+              + geom_smooth(aes(color = color), method = 'loess', size = size, alpha = alpha, se = False, span = smoothness)
               + labs(x = 'Pseudotime', y = y)
               + theme_std)
         else:
             time_line = (ggplot(plot_df, aes(x = 'x', y = 'y'))
-              + geom_smooth(method = 'mavg', size = size, alpha = alpha, color = color, se = False)
+              + geom_smooth(method = 'loess', size = size, alpha = alpha, color = color, se = False, span = smoothness)
               + labs(x = 'Pseudotime', y = y)
               + theme_std)
 
@@ -93,11 +96,11 @@ def pseudotime_lineplot(adata, y, facet = True, alpha = 1,
         if facet:
             time_line = (ggplot(plot_df, aes('pseudotime', 'score'))
             + facet_wrap('signature', scales = 'free_y', ncol = ncol)
-            + geom_smooth(aes(color = 'signature'), method='mavg', size = size, se = False)
+            + geom_smooth(aes(color = 'signature'), method='loess', size = size, se = False, span = smoothness)
             + theme_std)
         else:
             time_line = (ggplot(plot_df, aes('pseudotime', 'score'))
-            + geom_smooth(aes(color = 'signature'), method='mavg', size = size, se = False)
+            + geom_smooth(aes(color = 'signature'), method='loess', size = size, se = False, span = smoothness)
             + theme_std)
 
     if "cell_cycle_division" in adata.uns["scycle"]:
