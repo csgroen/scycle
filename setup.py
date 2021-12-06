@@ -21,7 +21,7 @@ setup(name='scycle',
           'scrublet',
           'requests',
           'stabilized-ica',
-          'transmorph',
+          'transmorph==0.1.0',
           'scikit-misc'
       ],
       dependency_links=[],
