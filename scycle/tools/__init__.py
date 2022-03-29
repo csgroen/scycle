@@ -9,7 +9,6 @@ from ._remap_nodes import remap_nodes
 from ._pseudotime import pseudotime
 from ._cell_cycle_phase import cell_cycle_phase
 from ._annotate_cell_cycle import annotate_cell_cycle
-from ._integration import integration
 from ._subtract_cc import subtract_cc
 from ._classify_cc_genes import classify_genes_by_ic
 from ._curvature import curvature
