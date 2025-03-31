@@ -174,8 +174,8 @@ def _dimRed_ica(adata, n_comps, max_iter, seed, verbose=False):
         print("-- Dimensionality reduction using ICA...")
     X = adata.X.copy()
     np.subtract(X, np.mean(X, axis=0), out=X)
-    sICA = StabilizedICA(n_components=n_comps, max_iter=2000, n_jobs=-1)
-    sICA.fit(X.T, n_runs=100, plot=False, normalize=True, fun="logcosh")
+    sICA = StabilizedICA(n_components=n_comps, max_iter=2000, n_jobs=-1, n_runs=100, plot=False, normalize=True, fun="logcosh")
+    sICA.fit(X)
     if verbose:
         print("-- Done")
     S_pi = np.linalg.pinv(sICA.S_)

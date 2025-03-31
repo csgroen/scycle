@@ -49,6 +49,8 @@ g2m_inhibitory_markers = [
 ]
 histone_markers = ["HIST1H4C", "HIST1H1E", "HIST2H2AC", "HIST1H1C","H4C3","H1-4","H2AC20","H1-2"]
 
+cc_sigfast = ["UBE2C","TOP2A", "TMPO", "HJURP", "RRM1", "RAD51AP1", "RRM2", "CDC45", "BLM", "BRIP1", "E2F8", "H2AC20"]
+
 cc_genes = ['ACYP1', 'ALG6', 'ANKRD32', 'ANLN', 'ANP32E', 'APEX2', 'APOBEC3B',
        'ARHGAP11A', 'ARHGAP11B', 'ARHGAP19', 'ARHGEF39', 'ARL6IP1',
        'ARL6IP6', 'ASF1B', 'ASPM', 'ATAD2', 'ATAD5', 'AURKA', 'AURKB',
